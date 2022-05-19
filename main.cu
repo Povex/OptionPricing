@@ -16,7 +16,7 @@ void testEuropeanOption(){
     Asset asset(100.0f, 0.3f, 0.01f);
     EuropeanOption option(asset, 100.0f, 1.0f);
 
-    unsigned int n_simulations = 1e6;
+    unsigned int n_simulations = 10000000;
 
     cout << "Payoff call: " << option.call_payoff_blackSholes() << endl;
     cout << "Payoff put: " << option.put_payoff_blackSholes() << endl;
@@ -106,5 +106,5 @@ void testAutoCallable(){
 }
 
 int main() {
-    testAutoCallable();
+    testEuropeanOption();
 }

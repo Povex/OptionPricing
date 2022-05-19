@@ -21,17 +21,15 @@ __global__ void K_call_payoff(AutoCallableOption option, float *d_samples, float
     float S = option.asset.spot_price;
     int date_index = 0;
     float dt = d_observationDates[date_index];
-    float time = d_observationDates[date_index];
 
-    while (time <= d_observationDates[dateBarrierSize-1]) {
+    while (date_index <= dateBarrierSize - 1) {
         S = S * exp((option.asset.risk_free_rate - (pow(option.asset.volatility, 2) / 2)) * dt
                 + option.asset.volatility * sqrt(dt) * d_normals[i + date_index]);
 
         if (S >= d_barriers[date_index]) { barrier_hit = true; break; }
 
         date_index++;
-        dt = d_observationDates[date_index] - time;
-        time += dt;
+        dt = d_observationDates[date_index] - d_observationDates[date_index - 1];
     }
 
     if(!barrier_hit)
@@ -71,7 +69,6 @@ SimulationResult AutoCallableOption::call_payoff_montecarlo_cpu(){
 
     float *C = (float *)malloc(sizeof(float) * N_PATHS);
 
-    float time = 0.0f;
     int date_index = 0;
     float dt = 0.0f;
 
@@ -80,8 +77,7 @@ SimulationResult AutoCallableOption::call_payoff_montecarlo_cpu(){
         S = asset.spot_price;
         date_index = 0;
         dt = observationDates[date_index];
-        time = observationDates[date_index];
-        while (time <= observationDates[observationDates.size()-1]) {
+        while (date_index <= observationDates.size() - 1) {
             z = distribution(gen);
             S = S * exp((asset.risk_free_rate - (pow(asset.volatility, 2) / 2)) * dt + asset.volatility * sqrt(dt) * z);
 
@@ -91,8 +87,7 @@ SimulationResult AutoCallableOption::call_payoff_montecarlo_cpu(){
             }
 
             date_index++;
-            dt = observationDates[date_index] - time;
-            time += dt;
+            dt = observationDates[date_index] - observationDates[date_index - 1];
         }
 
         if(!barrier_hit) C[i] = exp(-asset.risk_free_rate * observationDates[observationDates.size()-1]) * rebase;
@@ -157,18 +152,4 @@ SimulationResult  AutoCallableOption::call_payoff_montecarlo_gpu(){
     cudaFree(d_barriers);
 
     return result;
-}
-
-void AutoCallableOption::addDateBarrier(pair<float, float> p){
-    dateBarrier.insert(p);
-}
-
-void AutoCallableOption::print_map(){
-    map<float, float>::iterator itr;
-    cout << "\tKEY\tELEMENT\n";
-    for (itr = dateBarrier.begin(); itr != dateBarrier.end(); ++itr) {
-        cout << '\t' << itr->first << '\t' << itr->second
-             << '\n';
-    }
-    cout << endl;
 }

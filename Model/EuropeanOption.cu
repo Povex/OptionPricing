@@ -110,15 +110,23 @@ SimulationResult EuropeanOption::call_payoff_montecarlo(const unsigned int n_sim
 }
 
 SimulationResult EuropeanOption::call_payoff_montecarlo_cpu(const unsigned int n_simulations){
-    default_random_engine eng{static_cast<long unsigned int>(time(0)) };
-    normal_distribution<double> distribution(0.0f, 1.0f);
-
     float *samples = (float *)malloc(n_simulations * sizeof (float));
+
+    size_t size = sizeof(float) * n_simulations;
+    float *h_normals = (float *) malloc(size);
+    float *d_normals = NULL;
+    cudaMalloc((void **)&d_normals, size);
+
+    curandGenerator_t generator;
+    curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_MTGP32);
+    curandSetPseudoRandomGeneratorSeed(generator, 1234ULL);
+    curandGenerateNormal(generator, d_normals, n_simulations, 0.0f, 1.0f);
+    cudaMemcpy(h_normals, d_normals, size, cudaMemcpyDeviceToHost);
 
     float S_T = 0.0f;
     float C = 0.0f;
     for(int i=0; i<n_simulations;i++){
-        S_T = market.spot_price * exp((market.risk_free_rate - 0.5 * pow(market.volatility, 2)) * time_to_maturity + market.volatility * sqrt(time_to_maturity) * distribution(eng));
+        S_T = market.spot_price * exp((market.risk_free_rate - 0.5 * pow(market.volatility, 2)) * time_to_maturity + market.volatility * sqrt(time_to_maturity) * h_normals[i]);
         C = exp(-market.risk_free_rate * time_to_maturity) * fmax(0, S_T - strike_price); // discount by riskfree rate payoff
         samples[i] = C;
     }
