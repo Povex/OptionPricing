@@ -12,12 +12,10 @@
 #include <ctime>
 #include <cuda_runtime.h>
 #include <curand.h>
-#include <curand_kernel.h>
 #include <thrust/reduce.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <chrono>
-#include <numeric>
 
 // ------------------------------- BEGIN CUDA FUNCTIONS -------------------------------
 
@@ -81,8 +79,6 @@ GPUParams *EuropeanOptionGPU::getGpuParams() const {
 void EuropeanOptionGPU::setGpuParams(GPUParams *gpuParams) {
     this->gpuParams = gpuParams;
 }
-
-
 
 SimulationResult EuropeanOptionGPU::callPayoff() {
     // Initialize GPU params

@@ -5,10 +5,18 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <chrono>
+
 #include "OptionPricingAnalysisFacade.cuh"
-#include "../Model/Options/EuropeanOption/EuropeanOption.cuh"
+#include "../Model/InputOutput/GPUParams.cuh"
+#include "../Model/InputOutput/MonteCarloParams.cuh"
+#include "../Model/InputOutput/Asset.cuh"
+#include "../Model/Options/EuropeanOption/EuropeanOptionAnalytical.cuh"
+#include "../Model/Options/EuropeanOption/EuropeanOptionSerialCPU.cuh"
+#include "../Model/Options/EuropeanOption/EuropeanOptionGPU.cuh"
+#include "../Utils/DateUtils.cuh"
 
 using namespace std;
 
@@ -17,7 +25,7 @@ void OptionPricingAnalysisFacade::executeAnalysis() {
 }
 
 void OptionPricingAnalysisFacade::europeanOptionsAnalysis() {
-   /* std::string fname = "OptionsData/EuropeanOption/data.csv";
+    std::string fname = "AnalysisData/ReliabilityAnalysis/Input/data.csv";
     vector<vector<string>> content;
     vector<string> row;
     string line, word;
@@ -39,29 +47,49 @@ void OptionPricingAnalysisFacade::europeanOptionsAnalysis() {
     else
         cout<<"Could not open the file\n";
 
-    vector<EuropeanOption*> options(content.size());
-    vector<Result> results;
+
     float spotPrice, volatility, riskFreeRate, strikePrice, timeToMaturity;
-    for(int i=1; i<2; i++)
-    {
-        spotPrice =  std::stof(content[i][0]);
-        volatility = std::stof(content[i][1]);
-        riskFreeRate = std::stof(content[i][2]);
-        strikePrice = std::stof(content[i][3]);
-        timeToMaturity = std::stof(content[i][4]);
+    spotPrice =  std::stof(content[1][0]);
+    volatility = std::stof(content[1][1]);
+    riskFreeRate = std::stof(content[1][2]);
+    strikePrice = std::stof(content[1][3]);
+    timeToMaturity = std::stof(content[1][4]);
+    file.close();
 
-        GPUParams gpuParams(256);
-        MonteCarloParams monteCarloParams(12e4, 0);
-        Asset asset(spotPrice, volatility, riskFreeRate);
-        auto *option = new EuropeanOption(&asset, &gpuParams, &monteCarloParams, strikePrice, timeToMaturity);
-        results.push_back(option->callPayoff());
-        results.push_back(option->callPayoffSerialCPU());
-        results.push_back(option->callPayoffBlackSholes());
+    GPUParams gpuParams(256);
+    MonteCarloParams monteCarloParams(1e8, 0);
+    Asset asset(spotPrice, volatility, riskFreeRate);
 
-        cout << results[0] << endl;
-        cout << results[1] << endl;
-        cout << results[2] << endl;
-    }
+    EuropeanOption *optionAnalytical, *optionSerialCPU, *optionGPU;
 
-    file.close();*/
+    optionAnalytical = new EuropeanOptionAnalytical(&asset, strikePrice, timeToMaturity);
+    SimulationResult analyticalResultC = optionAnalytical->callPayoff();
+    SimulationResult analyticalResultP = optionAnalytical->putPayoff();
+
+    optionSerialCPU = new EuropeanOptionSerialCPU(&asset, strikePrice, timeToMaturity, &monteCarloParams, &gpuParams);
+    SimulationResult serialCpuResultC = optionSerialCPU->callPayoff();
+    SimulationResult serialCpuResultP = optionSerialCPU->putPayoff();
+
+    optionGPU = new EuropeanOptionGPU(&asset, strikePrice, timeToMaturity, &monteCarloParams, &gpuParams);
+    SimulationResult gpuResultC = optionGPU->callPayoff();
+    SimulationResult gpuResultP = optionGPU->putPayoff();
+
+    string sep = ",";
+    std::ofstream myFile("AnalysisData/ReliabilityAnalysis/Output/data "+ DateUtils().getDate() + ".csv");
+    myFile << "Type,Engine,value,stdError, confidence1, confidence2,timeElapsed\n";
+    myFile << "EuropeanCall" << "Analytical" << sep << analyticalResultC.getValue() << "\n";
+    myFile << "EuropeanCall" << "SerialCPU" << sep << serialCpuResultC.getValue() << sep << serialCpuResultC.getStdError()
+           << sep << serialCpuResultC.getConfidence()[0] << sep << serialCpuResultC.getConfidence()[1]
+           << sep << serialCpuResultC.getTimeElapsed() << "\n";
+    myFile << "EuropeanCall" << "GPU" << sep << gpuResultC.getValue() << sep << gpuResultC.getStdError()
+           << sep << gpuResultC.getConfidence()[0] << sep << gpuResultC.getConfidence()[1]
+           << sep << gpuResultC.getTimeElapsed() << "\n";
+    myFile << "EuropeanPut" << "Analytical" << sep << analyticalResultP.getValue() << "\n";
+    myFile << "EuropeanPut" << "SerialCPU" << sep << serialCpuResultP.getValue() << sep << serialCpuResultP.getStdError()
+           << sep << serialCpuResultP.getConfidence()[0] << sep << serialCpuResultP.getConfidence()[1]
+           << sep << serialCpuResultP.getTimeElapsed() << "\n";
+    myFile << "EuropeanPut" << "GPU" << sep << gpuResultP.getValue() << sep << gpuResultP.getStdError()
+           << sep << gpuResultP.getConfidence()[0] << sep << gpuResultP.getConfidence()[1]
+           << sep << gpuResultP.getTimeElapsed() << "\n";
+    myFile.close();
 }

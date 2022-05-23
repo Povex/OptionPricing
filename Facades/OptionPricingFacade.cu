@@ -7,6 +7,7 @@
 #include "../Model/InputOutput/MonteCarloParams.cuh"
 #include "../Model/InputOutput/Asset.cuh"
 #include "../Model/Options/EuropeanOption/EuropeanOption.cuh"
+#include "../Model/Options/EuropeanOption/EuropeanOptionGPU.cuh"
 
 #include <iostream>
 #include <vector>
@@ -16,7 +17,7 @@
 using namespace std;
 
 vector<SimulationResult> OptionPricingFacade::executeEuropeanCalls() {
-    /*std::string fname = "OptionsData/EuropeanOption/data.csv";
+    std::string fname = "OptionsData/EuropeanOption/data.csv";
     vector<vector<string>> content;
     vector<string> row;
     string line, word;
@@ -52,11 +53,11 @@ vector<SimulationResult> OptionPricingFacade::executeEuropeanCalls() {
         GPUParams gpuParams(256);
         MonteCarloParams monteCarloParams(12e4, 0);
         Asset asset(spotPrice, volatility, riskFreeRate);
-        auto *option = new EuropeanOption(&asset, &gpuParams, &monteCarloParams, strikePrice, timeToMaturity);
+        auto *option = new EuropeanOptionGPU(&asset, strikePrice, timeToMaturity, &monteCarloParams, &gpuParams);
         results.push_back(option->callPayoff());
     }
 
     file.close();
 
-    return results;*/
+    return results;
 }

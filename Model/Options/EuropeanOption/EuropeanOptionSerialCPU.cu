@@ -13,11 +13,7 @@
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <curand_kernel.h>
-#include <thrust/reduce.h>
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
 #include <chrono>
-#include <numeric>
 
 EuropeanOptionSerialCPU::EuropeanOptionSerialCPU(Asset *asset, float strikePrice, float timeToMaturity,
                                                  MonteCarloParams *monteCarloParams, GPUParams *gpuParams)
@@ -41,7 +37,7 @@ void EuropeanOptionSerialCPU::setGpuParams(GPUParams *gpuParams) {
 }
 
 SimulationResult EuropeanOptionSerialCPU::callPayoff() {
-    const int N_SIMULATIONS = getMonteCarloParams()->getNSimulations();
+    const unsigned int N_SIMULATIONS = getMonteCarloParams()->getNSimulations();
     float *samples = (float *)malloc(N_SIMULATIONS * sizeof (float));
 
     size_t size = sizeof(float) * N_SIMULATIONS;
@@ -60,7 +56,7 @@ SimulationResult EuropeanOptionSerialCPU::callPayoff() {
     // Start timer
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     float S_T;
-    for(int i=0; i<N_SIMULATIONS;i++){
+    for(unsigned int i=0; i<N_SIMULATIONS;i++){
         S_T = generateS_T(getAsset()->getSpotPrice(), getAsset()->getRiskFreeRate(),
                           getAsset()->getVolatility(), timeToMaturity, h_normals[i]);
         samples[i] = discountCall(getAsset()->getRiskFreeRate(), timeToMaturity, S_T, strikePrice);

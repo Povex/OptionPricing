@@ -7,20 +7,20 @@
 #include "StatisticUtilsCPU.cuh"
 
 void StatisticUtilsCPU::calcMean() {
-    float temp = std::accumulate(samples, samples + n - 1, 0.0f);
-    float mean = temp / float(n);
+    double temp = std::accumulate(samples, samples + n - 1, 0.0);
+    double mean = temp / n;
     setMean(mean);
 }
 
 void StatisticUtilsCPU::calcCI() {
     // Calculate confidence interval 95% serially
     // Assumes that mean is already calculated
-    float temp = 0.0f;
+    double temp = 0.0;
     for(int i=0; i<n; i++){
         temp += powf(samples[i] - mean, 2);
     }
-    float stdDev = sqrtf(temp/float(n-1));
-    float stdError = stdDev/(sqrt(n));
+    double stdDev = sqrt(temp/n-1);
+    double stdError = stdDev/(sqrt(n));
     setStdDev(stdDev);
     setStdError(stdError);
 

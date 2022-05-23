@@ -179,7 +179,7 @@ void testEuropeanOptions2(){
     }
 }
 
-
 int main() {
-    europeanOptionTest();
+    OptionPricingAnalysisFacade facade;
+    facade.executeAnalysis();
 }

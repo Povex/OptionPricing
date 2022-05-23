@@ -5,7 +5,6 @@
 #ifndef OPTIONPRICING_OPTIONPRICINGANALYSISFACADE_CUH
 #define OPTIONPRICING_OPTIONPRICINGANALYSISFACADE_CUH
 
-
 class OptionPricingAnalysisFacade {
 public:
     void executeAnalysis();
