@@ -20,6 +20,8 @@ public:
     SimulationResult();
     SimulationResult(float value, const std::vector<float> &confidence, float stdError, float timeElapsed);
 
+    SimulationResult(float value);
+
     const std::vector<float> &getConfidence() const;
 
     void setConfidence(const std::vector<float> confidence);

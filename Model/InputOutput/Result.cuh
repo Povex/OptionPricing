@@ -6,6 +6,8 @@
 #define OPTIONPRICING_RESULT_CUH
 
 
+#include <ostream>
+
 class Result {
 private:
     float value;
@@ -19,6 +21,8 @@ public:
     float getValue() const;
 
     void setValue(float value);
+
+    friend std::ostream &operator<<(std::ostream &os, const Result &result);
 };
 
 #endif //OPTIONPRICING_RESULT_CUH

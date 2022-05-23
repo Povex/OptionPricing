@@ -12,11 +12,13 @@ using namespace std;
 
 class OptionPricingFacade {
 public:
-    vector<SimulationResult> executeEuropeanCall();
+    vector<SimulationResult> executeEuropeanCalls();
 
-    SimulationResult executeEuropeanPut();
+    vector<SimulationResult> executeEuropeanPuts();
 
-    SimulationResult executeAutoCallableCall();
+    vector<SimulationResult> executeAutoCallableCalls();
+
+
 };
 
 

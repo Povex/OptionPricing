@@ -1,22 +1,20 @@
 //
-// Created by marco on 19/05/22.
+// Created by marco on 23/05/22.
 //
 
 #ifndef OPTIONPRICING_EUROPEANOPTION_CUH
 #define OPTIONPRICING_EUROPEANOPTION_CUH
 
+
 #include "../Option.cuh"
 
-class EuropeanOption : public Option {
-private:
+class EuropeanOption : public Option{
+protected:
     float strikePrice;
 
     float timeToMaturity;
 public:
-    EuropeanOption(Asset *asset, GPUParams *gpuParams, MonteCarloParams *monteCarloParams);
-
-    EuropeanOption(Asset *asset, GPUParams *gpuParams, MonteCarloParams *monteCarloParams, float strikePrice,
-                   float timeToMaturity);
+    EuropeanOption(Asset *asset, float strikePrice, float timeToMaturity);
 
     ~EuropeanOption() = default;
 
@@ -27,19 +25,6 @@ public:
     float getTimeToMaturity() const;
 
     void setTimeToMaturity(float timeToMaturity);
-
-    SimulationResult callPayoff() override;
-
-    SimulationResult putPayoff() override;
-
-    SimulationResult callPayoffSerialCPU();
-
-    SimulationResult putPayoffSerialCPU();
-
-    float callPayoffBlackSholes();
-
-    float putPayoffBlackSholes();
-
 };
 
 

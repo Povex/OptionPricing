@@ -16,4 +16,9 @@ Result::Result(float value) : value(value) {}
 
 Result::Result() {}
 
+std::ostream &operator<<(std::ostream &os, const Result &result) {
+    os << "value: " << result.value;
+    return os;
+}
+
 

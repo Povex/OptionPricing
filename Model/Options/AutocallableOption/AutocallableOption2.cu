@@ -18,7 +18,7 @@
 #include "../../Utilities/StatisticUtils/StatisticUtilsCPU.cuh"
 #include "../../Utilities/StatisticUtils/StatisticUtilsGPU.cuh"
 
-
+/*
 __host__ __device__
 void autoCallablePayoff(float spotPrice,
                               float riskFreeRate,
@@ -242,3 +242,4 @@ AutocallableOption2::AutocallableOption2(Asset *asset, GPUParams *gpuParams, Mon
           barriers(barriers), payoffs(payoffs) {}
 
 
+*/

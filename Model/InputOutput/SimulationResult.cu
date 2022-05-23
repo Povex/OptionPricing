@@ -40,4 +40,6 @@ std::ostream &operator<<(std::ostream &os, const SimulationResult &result) {
     return os;
 }
 
+SimulationResult::SimulationResult(float value) : Result(value) {}
+
 

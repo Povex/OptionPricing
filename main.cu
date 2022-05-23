@@ -6,6 +6,11 @@
 #include "Facades/OptionPricingFacade.cuh"
 #include "Model/Options/AutocallableOption/AutocallableOption2.cuh"
 #include "Model/Options/EuropeanOption/EuropeanOption.cuh"
+#include "Facades/OptionPricingAnalysisFacade.cuh"
+#include "Model/Options/EuropeanOption/EuropeanOption.cuh"
+#include "Model/Options/EuropeanOption/EuropeanOptionGPU.cuh"
+#include "Model/Options/EuropeanOption/EuropeanOptionAnalytical.cuh"
+#include "Model/Options/EuropeanOption/EuropeanOptionSerialCPU.cuh"
 
 #include <iostream>
 
@@ -108,15 +113,21 @@ void testAutoCallable(){
  */
 
 void europeanOptionTest(){
-    GPUParams gpuParams(256);
-    MonteCarloParams monteCarloParams(12e4, 0);
+    GPUParams *gpuParams = new GPUParams(256);
+    MonteCarloParams *monteCarloParams = new MonteCarloParams(12e4, 0);
 
-    Asset asset(100.0f, 0.3f, 0.03f);
-    EuropeanOption europeanOption(&asset, &gpuParams, &monteCarloParams, 100.0f, 1.0f);
+    Asset *asset = new Asset(100.0f, 0.3f, 0.03f);
+    EuropeanOptionGPU europeanOptiongpu(asset, 100.0f, 1.0f, monteCarloParams, gpuParams);
 
-    SimulationResult s = europeanOption.callPayoff();
-    cout << "Call GPU simulation: " << s << endl;
-    s = europeanOption.callPayoffSerialCPU();
+    cout << "Call GPU simulation: " << europeanOptiongpu.callPayoff() << endl;
+
+    EuropeanOptionAnalytical europeanOptionAnalytical(asset, 100.0, 1.0f);
+    cout << "BlackSholes: " << (Result) europeanOptionAnalytical.callPayoff() << endl;
+
+    EuropeanOptionSerialCPU europeanOptionSerialCpu(asset, 100.0f, 1.0f, monteCarloParams, gpuParams);
+    cout << "Call CPU simulation: " << europeanOptionSerialCpu.callPayoff() << endl;
+
+    /*s = europeanOption.callPayoffSerialCPU();
     cout << "Call CPU simulation: " << s << endl;
 
     cout << "Call Black-Sholes value: " << europeanOption.callPayoffBlackSholes() << endl << endl;
@@ -127,9 +138,10 @@ void europeanOptionTest(){
     s = europeanOption.putPayoffSerialCPU();
     cout << "Put CPU simulation: " << s << endl;
 
-    cout << "Put Black-Sholes value: " << europeanOption.putPayoffBlackSholes() << endl;
+    cout << "Put Black-Sholes value: " << europeanOption.putPayoffBlackSholes() << endl;*/
 }
 
+/*
 void testAutocallable2(){
     Asset asset(100.0f, 0.3f, 0.3f);
     int n_binary_option = 3;
@@ -157,14 +169,17 @@ void testAutocallable2(){
     cout << "Call GPU simulation: " << option.callPayoff() << endl;
     cout << "Call CPU simulation: " << option.callPayoffMontecarloCpu() << endl;
 }
-
-
-int main() {
-    // Il main simula un client CLI, ma grazie al Facade il sistema può essere usato da una GUI, da un CLI etc..
+*/
+void testEuropeanOptions2(){
     OptionPricingFacade optionPricingFacade;
-    vector<SimulationResult> results = optionPricingFacade.executeEuropeanCall();
+    vector<SimulationResult> results = optionPricingFacade.executeEuropeanCalls();
 
     for(const SimulationResult& result: results){
         cout << result << endl;
     }
+}
+
+
+int main() {
+    europeanOptionTest();
 }
