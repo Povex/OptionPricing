@@ -6,10 +6,10 @@
 #define OPTIONPRICING_OPTION_CUH
 
 
-#include "../Context/Asset.cuh"
-#include "../Context/GPUParams.cuh"
-#include "../Context/MonteCarloParams.cuh"
-#include "../Context/SimulationResult.cuh"
+#include "../InputOutput/Asset.cuh"
+#include "../InputOutput/GPUParams.cuh"
+#include "../InputOutput/MonteCarloParams.cuh"
+#include "../InputOutput/SimulationResult.cuh"
 
 class Option {
 private:

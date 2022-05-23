@@ -12,7 +12,7 @@
 #include <curand_kernel.h>
 
 #include <random>
-#include "../../Context/Asset.cuh"
+#include "../../InputOutput/Asset.cuh"
 
 using namespace std;
 /*

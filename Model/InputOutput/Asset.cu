@@ -4,8 +4,6 @@
 
 #include "Asset.cuh"
 
-Asset::Asset() {}
-
 Asset::Asset(float spotPrice, float volatility, float riskFreeRate) : spot_price(spotPrice), volatility(volatility),
                                                                       risk_free_rate(riskFreeRate) {}
 
@@ -31,8 +29,4 @@ float Asset::getRiskFreeRate() const {
 
 void Asset::setRiskFreeRate(float riskFreeRate) {
     risk_free_rate = riskFreeRate;
-}
-
-Asset::~Asset() {
-
 }

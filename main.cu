@@ -1,10 +1,11 @@
 
-#include "Context/Asset.cuh"
-#include "Context/SimulationResult.cuh"
-#include "Context/GPUParams.cuh"
-#include "Context/MonteCarloParams.cuh"
-#include "Model/EuropeanOption/EuropeanOption.cuh"
-#include "Model/AutocallableOption/AutocallableOption2.cuh"
+#include "Model/InputOutput/Asset.cuh"
+#include "Model/InputOutput/SimulationResult.cuh"
+#include "Model/InputOutput/GPUParams.cuh"
+#include "Model/InputOutput/MonteCarloParams.cuh"
+#include "Facades/OptionPricingFacade.cuh"
+#include "Model/Options/AutocallableOption/AutocallableOption2.cuh"
+#include "Model/Options/EuropeanOption/EuropeanOption.cuh"
 
 #include <iostream>
 
@@ -159,5 +160,11 @@ void testAutocallable2(){
 
 
 int main() {
-    testAutocallable2();
+    // Il main simula un client CLI, ma grazie al Facade il sistema può essere usato da una GUI, da un CLI etc..
+    OptionPricingFacade optionPricingFacade;
+    vector<SimulationResult> results = optionPricingFacade.executeEuropeanCall();
+
+    for(const SimulationResult& result: results){
+        cout << result << endl;
+    }
 }

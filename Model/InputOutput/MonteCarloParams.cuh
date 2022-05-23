@@ -12,11 +12,9 @@ private:
 
     int PRNGType;
 public:
-    MonteCarloParams();
-
     MonteCarloParams(int nSimulations, int prngType);
 
-    virtual ~MonteCarloParams();
+    ~MonteCarloParams() = default;
 
     int getNSimulations() const;
 

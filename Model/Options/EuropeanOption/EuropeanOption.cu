@@ -120,9 +120,6 @@ EuropeanOption::EuropeanOption(Asset *asset, GPUParams *gpuParams, MonteCarloPar
                                                                             strikePrice(strikePrice),
                                                                             timeToMaturity(timeToMaturity) {}
 
-EuropeanOption::~EuropeanOption() {
-
-}
 
 SimulationResult EuropeanOption::callPayoff() {
     // Initialize GPU params

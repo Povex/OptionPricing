@@ -4,8 +4,6 @@
 
 #include "MonteCarloParams.cuh"
 
-MonteCarloParams::MonteCarloParams() {}
-
 MonteCarloParams::MonteCarloParams(int nSimulations, int prngType) : nSimulations(nSimulations), PRNGType(prngType) {}
 
 int MonteCarloParams::getNSimulations() const {
@@ -23,10 +21,5 @@ int MonteCarloParams::getPrngType() const {
 void MonteCarloParams::setPrngType(int prngType) {
     PRNGType = prngType;
 }
-
-MonteCarloParams::~MonteCarloParams() {
-
-}
-
 
 

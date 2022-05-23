@@ -14,11 +14,10 @@ private:
     float risk_free_rate;
 
 public:
-    Asset();
 
     Asset(float spotPrice, float volatility, float riskFreeRate);
 
-    virtual ~Asset();
+    ~Asset() = default;
 
     float getSpotPrice() const;
 

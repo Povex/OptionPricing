@@ -18,7 +18,7 @@ public:
     EuropeanOption(Asset *asset, GPUParams *gpuParams, MonteCarloParams *monteCarloParams, float strikePrice,
                    float timeToMaturity);
 
-    virtual ~EuropeanOption();
+    ~EuropeanOption() = default;
 
     float getStrikePrice() const;
 

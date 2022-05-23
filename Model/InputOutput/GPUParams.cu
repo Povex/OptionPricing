@@ -12,8 +12,6 @@ int GPUParams::getNThreads() {
     return nThreads;
 }
 
-GPUParams::GPUParams() {}
-
 GPUParams::GPUParams(int nThreads) : nThreads(nThreads) {}
 
 

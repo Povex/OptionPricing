@@ -1,0 +1,5 @@
+spotPrice,volatility,riskFreeRate,strikePrice,timeToMaturity
+100,0.3,0.01,100,1
+100,0.3,0.03,100,1
+100,0.3,0.01,100,1
+100,0.5,0.03,130,1

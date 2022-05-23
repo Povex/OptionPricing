@@ -12,8 +12,6 @@ private:
 public:
     GPUParams(int nThreads);
 
-    GPUParams();
-
     ~GPUParams() = default;
 
     int getNThreads();

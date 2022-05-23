@@ -5,8 +5,8 @@
 #ifndef OPTIONPRICING_DOWNOUTOPTION_CUH
 #define OPTIONPRICING_DOWNOUTOPTION_CUH
 
-#include "../../Context/Asset.cuh"
-#include "../../Context/SimulationResult.cuh"
+#include "../../InputOutput/Asset.cuh"
+#include "../../InputOutput/SimulationResult.cuh"
 
 class DownOutOption {
 
