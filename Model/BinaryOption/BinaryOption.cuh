@@ -6,8 +6,8 @@
 #define OPTIONPRICING_BINARYOPTION_CUH
 
 
-#include "Asset.cuh"
-#include "SimulationResult.cuh"
+#include "../../Context/Asset.cuh"
+#include "../../Context/SimulationResult.cuh"
 
 class BinaryOption {
 

@@ -12,10 +12,10 @@
 #include <curand_kernel.h>
 
 #include <random>
-#include "Asset.cuh"
+#include "../../Context/Asset.cuh"
 
 using namespace std;
-
+/*
 __global__ void K_call_payoff(Asset asset, float time_to_maturity, float strike_price, float barrier, float *d_samples, float *d_normals, int n_intervals, float dt, const unsigned int n_paths){
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if(i >= n_paths) return;
@@ -130,3 +130,5 @@ SimulationResult DownOutOption::call_payoff_cpu(){
     SimulationResult result(C, N_PATHS, 0);
     return result;
 }
+
+ */

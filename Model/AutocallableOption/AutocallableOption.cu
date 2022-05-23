@@ -11,7 +11,7 @@
 #include <random>
 
 #include "AutocallableOption.cuh"
-
+/*
 __global__ void K_call_payoff(AutoCallableOption option, float *d_samples, float *d_normals, int n_paths,
                               float *d_observationDates, float *d_barriers, float *d_payoffs, int dateBarrierSize){
     int i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -153,3 +153,5 @@ SimulationResult  AutoCallableOption::call_payoff_montecarlo_gpu(){
 
     return result;
 }
+
+ */

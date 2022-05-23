@@ -1,17 +1,16 @@
 
-#include "Model/Asset.cuh"
-#include "Model/EuropeanOption.cuh"
-#include "Model/SimulationResult.cuh"
-#include "Model/BinaryOption.cuh"
-#include "Model/AutocallableOption.cuh"
+#include "Context/Asset.cuh"
+#include "Context/SimulationResult.cuh"
+#include "Context/GPUParams.cuh"
+#include "Context/MonteCarloParams.cuh"
+#include "Model/EuropeanOption/EuropeanOption.cuh"
+#include "Model/AutocallableOption/AutocallableOption2.cuh"
 
 #include <iostream>
-#include <time.h>
-#include <bits/stdc++.h>
-#include <vector>
 
 using namespace std;
 
+/*
 void testEuropeanOption(){
     Asset asset(100.0f, 0.3f, 0.01f);
     EuropeanOption option(asset, 100.0f, 1.0f);
@@ -105,6 +104,60 @@ void testAutoCallable(){
     cout << "Standard error " << t.getStdError() << endl;
 }
 
+ */
+
+void europeanOptionTest(){
+    GPUParams gpuParams(256);
+    MonteCarloParams monteCarloParams(12e4, 0);
+
+    Asset asset(100.0f, 0.3f, 0.03f);
+    EuropeanOption europeanOption(&asset, &gpuParams, &monteCarloParams, 100.0f, 1.0f);
+
+    SimulationResult s = europeanOption.callPayoff();
+    cout << "Call GPU simulation: " << s << endl;
+    s = europeanOption.callPayoffSerialCPU();
+    cout << "Call CPU simulation: " << s << endl;
+
+    cout << "Call Black-Sholes value: " << europeanOption.callPayoffBlackSholes() << endl << endl;
+
+
+    s = europeanOption.putPayoff();
+    cout << "Put GPU simulation: " << s << endl;
+    s = europeanOption.putPayoffSerialCPU();
+    cout << "Put CPU simulation: " << s << endl;
+
+    cout << "Put Black-Sholes value: " << europeanOption.putPayoffBlackSholes() << endl;
+}
+
+void testAutocallable2(){
+    Asset asset(100.0f, 0.3f, 0.3f);
+    int n_binary_option = 3;
+
+    std::vector<float> observationDates(n_binary_option);
+    observationDates[0] = 0.2f;
+    observationDates[1] = 0.4f;
+    observationDates[2] = 1.0f;
+
+    std::vector<float> barriers(n_binary_option);
+    barriers[0] = 110.0f;
+    barriers[1] = 140.0f;
+    barriers[2] = 160.0f;
+
+    std::vector<float> payoffs(n_binary_option);
+    payoffs[0] = 10.0f;
+    payoffs[1] = 20.0f;
+    payoffs[2] = 40.0f;
+
+    GPUParams gpuParams(256);
+    MonteCarloParams monteCarloParams(1e5, 0);
+
+    AutocallableOption2 option(&asset, &gpuParams, &monteCarloParams, 50.0f, observationDates, barriers, payoffs);
+
+    cout << "Call GPU simulation: " << option.callPayoff() << endl;
+    cout << "Call CPU simulation: " << option.callPayoffMontecarloCpu() << endl;
+}
+
+
 int main() {
-    testEuropeanOption();
+    testAutocallable2();
 }

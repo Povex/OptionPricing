@@ -7,8 +7,8 @@
 
 #include <thrust/host_vector.h>
 
-#include "Asset.cuh"
-#include "SimulationResult.cuh"
+#include "../../Context/Asset.cuh"
+#include "../../Context/SimulationResult.cuh"
 
 #include <map>
 #include <vector>

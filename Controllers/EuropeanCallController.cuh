@@ -1,0 +1,14 @@
+//
+// Created by marco on 23/05/22.
+//
+
+#ifndef OPTIONPRICING_EUROPEANCALLCONTROLLER_CUH
+#define OPTIONPRICING_EUROPEANCALLCONTROLLER_CUH
+
+
+class EuropeanCallController {
+
+};
+
+
+#endif //OPTIONPRICING_EUROPEANCALLCONTROLLER_CUH

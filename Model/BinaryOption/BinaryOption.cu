@@ -14,7 +14,7 @@
 #include <random>
 
 using namespace std;
-
+/*
 __global__ void is_over_barrier(BinaryOption option, float *d_samples, float *d_normals, const unsigned int n_paths){
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if(i >= n_paths) return;
@@ -165,6 +165,6 @@ float BinaryOption::actual_put_payoff_blackSholes() {
 
 
 
-
+*/
 
 
