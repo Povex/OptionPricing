@@ -3,10 +3,10 @@
 //
 
 #include "EuropeanOptionGPU.cuh"
-#include "SharedFunctions.cuh"
+#include "../Shared/SharedFunctions.cuh"
 
-#include "../../Utilities/errorHandler.cu"
-#include "../../Utilities/StatisticUtils/StatisticUtilsGPU.cuh"
+#include "../../../Utilities/errorHandler.cu"
+#include "../../../Utilities/StatisticUtils/StatisticUtilsGPU.cuh"
 
 #include <cmath>
 #include <ctime>
@@ -64,6 +64,14 @@ void europeanPutPayoff(float spotPrice,
 // ----------------------------------- END CUDA FUNCTIONS --------------------------------
 
 
+EuropeanOptionGPU::EuropeanOptionGPU(Asset *asset, float strikePrice, float timeToMaturity,
+                                     MonteCarloParams *monteCarloParams, GPUParams *gpuParams) : EuropeanOption(asset,
+                                                                                                                strikePrice,
+                                                                                                                timeToMaturity),
+                                                                                                 monteCarloParams(
+                                                                                                         monteCarloParams),
+                                                                                                 gpuParams(gpuParams) {}
+
 MonteCarloParams *EuropeanOptionGPU::getMonteCarloParams() const {
     return monteCarloParams;
 }
@@ -82,14 +90,17 @@ void EuropeanOptionGPU::setGpuParams(GPUParams *gpuParams) {
 
 SimulationResult EuropeanOptionGPU::callPayoff() {
     // Initialize GPU params
-    const int N_SIMULATION = getMonteCarloParams()->getNSimulations();
-    dim3 blockDim1D(getGpuParams()->getNThreads());
-    dim3 gridDim1D(std::ceil(float(getMonteCarloParams()->getNSimulations())/float(blockDim1D.x)));
+    int N_SIMULATION = monteCarloParams->getNSimulations();
 
+    /*
+    dim3 blockDim1D(getGpuParams()->getNThreads());
+    dim3 gridDim1D = 65535;
     // Compute capability 2.1 needs this
     const int GPU_MAX_BLOCKS = 65535;
     const int GPU_MAX_THREADS = GPU_MAX_BLOCKS * 1024;
-    if(N_SIMULATION > GPU_MAX_THREADS) gridDim1D = dim3(GPU_MAX_BLOCKS);
+    if(gridDim1D.x > GPU_MAX_THREADS) {
+        gridDim1D.x = GPU_MAX_BLOCKS;
+    }*/
 
     // Initialize host-device vectors
     thrust::host_vector<float> h_samples(N_SIMULATION);
@@ -109,21 +120,22 @@ SimulationResult EuropeanOptionGPU::callPayoff() {
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
     // Calculate payoff in device
-    europeanCallPayoff<<<gridDim1D,blockDim1D>>>(getAsset()->getSpotPrice(),
-                                                 getAsset()->getRiskFreeRate(),
-                                                 getAsset()->getVolatility(),
-                                                 timeToMaturity,
-                                                 strikePrice,
-                                                 ptr_samples,
-                                                 ptr_normals,
-                                                 N_SIMULATION);
+    europeanCallPayoff<<<gpuParams->getBlocksPerGrid(),gpuParams->getThreadsPerBlock()>>>(
+                    getAsset()->getSpotPrice(),
+                 getAsset()->getRiskFreeRate(),
+                 getAsset()->getVolatility(),
+                 timeToMaturity,
+                 strikePrice,
+                 ptr_samples,
+                 ptr_normals,
+                 N_SIMULATION);
     gpuErrchk( cudaPeekAtLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
 
     // Clean memory from PRNG
     curandDestroyGenerator(generator);
 
-    StatisticUtilsGPU statistics(blockDim1D, gridDim1D, d_samples);
+    StatisticUtilsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
     statistics.calcMean();
     statistics.calcCI();
 
@@ -137,28 +149,24 @@ SimulationResult EuropeanOptionGPU::callPayoff() {
     return result;
 }
 
-
-EuropeanOptionGPU::EuropeanOptionGPU(Asset *asset, float strikePrice, float timeToMaturity,
-                                     MonteCarloParams *monteCarloParams, GPUParams *gpuParams) : EuropeanOption(asset,
-                                                                                                                strikePrice,
-                                                                                                                timeToMaturity),
-                                                                                                 monteCarloParams(
-                                                                                                         monteCarloParams),
-                                                                                                 gpuParams(gpuParams) {}
-
 SimulationResult EuropeanOptionGPU::putPayoff() {
     // Initialize GPU params
     const int N_SIMULATION = getMonteCarloParams()->getNSimulations();
+
+
+
+    /*
     dim3 blockDim1D(getGpuParams()->getNThreads());
     dim3 gridDim1D(std::ceil(float(getMonteCarloParams()->getNSimulations())/float(blockDim1D.x)));
     const int GPU_MAX_BLOCKS = 65535;
     const int GPU_MAX_THREADS = GPU_MAX_BLOCKS * 1024;
-    if(N_SIMULATION > GPU_MAX_THREADS) gridDim1D = dim3(GPU_MAX_BLOCKS);
+    if(gridDim1D.x > GPU_MAX_THREADS) gridDim1D.x = GPU_MAX_BLOCKS;
+     */
 
     // Initialize host-device vectors
     thrust::host_vector<float> h_samples(N_SIMULATION);
     thrust::device_vector<float> d_samples = h_samples;
-    size_t size = sizeof(float) * N_SIMULATION;
+    // size_t size = sizeof(float) * N_SIMULATION;
     thrust::device_vector<float> d_normals(N_SIMULATION);
     float *ptr_normals = thrust::raw_pointer_cast(d_normals.data());
     float *ptr_samples = thrust::raw_pointer_cast(d_samples.data());
@@ -173,21 +181,22 @@ SimulationResult EuropeanOptionGPU::putPayoff() {
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
     // Calculate payoff in device
-    europeanPutPayoff<<<gridDim1D,blockDim1D>>>(getAsset()->getSpotPrice(),
-                                                getAsset()->getRiskFreeRate(),
-                                                getAsset()->getVolatility(),
-                                                timeToMaturity,
-                                                strikePrice,
-                                                ptr_samples,
-                                                ptr_normals,
-                                                N_SIMULATION);
+    europeanPutPayoff<<<gpuParams->getBlocksPerGrid(),gpuParams->getThreadsPerBlock()>>>(
+            getAsset()->getSpotPrice(),
+            getAsset()->getRiskFreeRate(),
+            getAsset()->getVolatility(),
+            timeToMaturity,
+            strikePrice,
+            ptr_samples,
+            ptr_normals,
+            N_SIMULATION);
     gpuErrchk( cudaPeekAtLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
 
     // Clean memory from PRNG
     curandDestroyGenerator(generator);
 
-    StatisticUtilsGPU statistics(blockDim1D, gridDim1D, d_samples);
+    StatisticUtilsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
     statistics.calcMean();
     statistics.calcCI();
 

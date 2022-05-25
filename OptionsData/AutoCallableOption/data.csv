@@ -1,0 +1,2 @@
+spotPrice,volatility,riskFreeRate,strikePrice,rebase,nDates,DateBarrierPayoffs
+100,0.3,0.01,3,0.2,130,50,0.4,140,60,0.6,150,70

@@ -6,13 +6,25 @@
 #include "StatisticUtilsGPU.cuh"
 #include "../errorHandler.cu"
 
+/*
+//define transformation f(x) -> x^2
+ struct square {
+ __host__ __device__ floatoperator()(float x)
+ { return x * x;     }
+ };
+ float snrm2_fast(device_vector<float>& x)
+ { // with fusion return sqrt
+ (
+ transform_reduce(x.begin(), x.end(), square(), 0.0f, plus<float>()); }
+*/
 
-__global__
+ __global__
 void varianceKernel(float *samples, int n, float mean){
     unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 
     while(i < n) {
         samples[i] = powf(samples[i] - mean, 2);
+
         i += blockDim.x * gridDim.x;
     }
 }
@@ -20,10 +32,11 @@ void varianceKernel(float *samples, int n, float mean){
 
 void StatisticUtilsGPU::calcMean() {
     // Use reduction to calculate mean
-    float sum = thrust::reduce(samples.begin(), samples.end(), 0.0f, thrust::plus<float>());
-    float mean = sum/(float) samples.size();
+    double sum = thrust::reduce(samples.begin(), samples.end(), 0.0, thrust::plus<double>());
     gpuErrchk( cudaPeekAtLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
+
+    double mean = sum/samples.size();
 
     setMean(mean);
 
@@ -34,13 +47,16 @@ void StatisticUtilsGPU::calcCI() {
     float *ptr_samples = thrust::raw_pointer_cast(samples.data());
     // Use reduction to calculate variance
     varianceKernel<<<gridDim1D, blockDim1D>>>(ptr_samples, n, mean);
-    float variance_sum = thrust::reduce(samples.begin(), samples.end(), 0.0f, thrust::plus<float>());
+    gpuErrchk( cudaPeekAtLastError() );
+    gpuErrchk( cudaDeviceSynchronize() );
+
+    double variance_sum = thrust::reduce(samples.begin(), samples.end(), 0.0, thrust::plus<double>());
     gpuErrchk( cudaPeekAtLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
 
     // Calculate standard error
-    float stdDev = sqrtf(variance_sum/float(n-1));
-    float stdError = stdDev/(sqrtf(n));
+    double stdDev = sqrt(variance_sum/(n-1));
+    double stdError = stdDev/(sqrt(n));
     setStdError(stdError);
     setStdDev(stdDev);
 

@@ -6,7 +6,7 @@
 #define OPTIONPRICING_EUROPEANOPTIONANALYTICAL_CUH
 
 
-#include "EuropeanOption.cuh"
+#include "../EuropeanOption.cuh"
 
 class EuropeanOptionAnalytical : public EuropeanOption {
 public:

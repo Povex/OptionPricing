@@ -9,7 +9,15 @@ class OptionPricingAnalysisFacade {
 public:
     void executeAnalysis();
 
-    void europeanOptionsAnalysis();
+    void europeanOptionsComparisonsImpl();
+
+    void europeanOptionsErrorTrendSimulations();
+
+    void europeanOptionTimeGpuParams();
+
+    void europeanOptionsExecTimeMultipleOptions();
+
+    void autoCallableAsymptoticLimitsAnalysis();
 };
 
 

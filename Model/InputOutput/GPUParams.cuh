@@ -6,17 +6,23 @@
 #define OPTIONPRICING_GPUPARAMS_CUH
 
 class GPUParams {
-private:
-    int nThreads;
+protected:
+    dim3 threadsPerBlock;
+    dim3 blocksPerGrid;
 
 public:
-    GPUParams(int nThreads);
+    GPUParams(const dim3 &threadsPerBlock, const dim3 &blocksPerGrid);
 
     ~GPUParams() = default;
 
-    int getNThreads();
+    const dim3 &getThreadsPerBlock() const;
 
-    void setNThreads(int nThreads);
+    void setThreadsPerBlock(const dim3 &threadsPerBlock);
+
+    const dim3 &getBlocksPerGrid() const;
+
+    void setBlocksPerGrid(const dim3 &blocksPerGrid);
+
 };
 
 #endif //OPTIONPRICING_GPUPARAMS_CUH

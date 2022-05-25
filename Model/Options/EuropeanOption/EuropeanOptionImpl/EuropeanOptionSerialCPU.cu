@@ -4,9 +4,9 @@
 
 
 #include "EuropeanOptionSerialCPU.cuh"
-#include "SharedFunctions.cuh"
+#include "../Shared/SharedFunctions.cuh"
 
-#include "../../Utilities/StatisticUtils/StatisticUtilsCPU.cuh"
+#include "../../../Utilities/StatisticUtils/StatisticUtilsCPU.cuh"
 
 #include <cmath>
 #include <ctime>
@@ -16,9 +16,8 @@
 #include <chrono>
 
 EuropeanOptionSerialCPU::EuropeanOptionSerialCPU(Asset *asset, float strikePrice, float timeToMaturity,
-                                                 MonteCarloParams *monteCarloParams, GPUParams *gpuParams)
-        : EuropeanOption(asset, strikePrice, timeToMaturity), monteCarloParams(monteCarloParams),
-          gpuParams(gpuParams) {}
+                                                 MonteCarloParams *monteCarloParams)
+        : EuropeanOption(asset, strikePrice, timeToMaturity), monteCarloParams(monteCarloParams) {}
 
 MonteCarloParams *EuropeanOptionSerialCPU::getMonteCarloParams() const {
     return monteCarloParams;
@@ -26,14 +25,6 @@ MonteCarloParams *EuropeanOptionSerialCPU::getMonteCarloParams() const {
 
 void EuropeanOptionSerialCPU::setMonteCarloParams(MonteCarloParams *monteCarloParams) {
     EuropeanOptionSerialCPU::monteCarloParams = monteCarloParams;
-}
-
-GPUParams *EuropeanOptionSerialCPU::getGpuParams() const {
-    return gpuParams;
-}
-
-void EuropeanOptionSerialCPU::setGpuParams(GPUParams *gpuParams) {
-    EuropeanOptionSerialCPU::gpuParams = gpuParams;
 }
 
 SimulationResult EuropeanOptionSerialCPU::callPayoff() {
@@ -50,8 +41,6 @@ SimulationResult EuropeanOptionSerialCPU::callPayoff() {
     curandSetPseudoRandomGeneratorSeed(generator, 42ULL);
     curandGenerateNormal(generator, d_normals, N_SIMULATIONS, 0.0f, 1.0f);
     cudaMemcpy(h_normals, d_normals, size, cudaMemcpyDeviceToHost);
-
-    cudaFree(d_normals);
 
     // Start timer
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -72,7 +61,8 @@ SimulationResult EuropeanOptionSerialCPU::callPayoff() {
 
     SimulationResult result(statistics.getMean(), statistics.getConfidence(),statistics.getStdError(), elapsedTime);
 
-    free(h_normals);
+    free(h_normals); cudaFree(d_normals);
+    free(samples);
 
     return result;
 }
@@ -91,8 +81,6 @@ SimulationResult EuropeanOptionSerialCPU::putPayoff() {
     curandSetPseudoRandomGeneratorSeed(generator, 42ULL);
     curandGenerateNormal(generator, d_normals, N_SIMULATIONS, 0.0f, 1.0f);
     cudaMemcpy(h_normals, d_normals, size, cudaMemcpyDeviceToHost);
-
-    cudaFree(d_normals);
 
     // Start timer
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -116,7 +104,8 @@ SimulationResult EuropeanOptionSerialCPU::putPayoff() {
                             statistics.getStdError(),
                             elapsedTime);
 
-    free(h_normals);
+    free(h_normals); cudaFree(d_normals);
+    free(samples);
 
     return result;
 }

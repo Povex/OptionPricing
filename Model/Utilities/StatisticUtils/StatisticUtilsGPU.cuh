@@ -18,6 +18,8 @@ protected:
 public:
     StatisticUtilsGPU(const dim3 &blockDim1D, const dim3 &gridDim1D, const thrust::device_vector<float> &samples);
 
+    ~StatisticUtilsGPU() = default;
+
     void calcMean();
     void calcCI();
 

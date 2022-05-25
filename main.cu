@@ -4,13 +4,13 @@
 #include "Model/InputOutput/GPUParams.cuh"
 #include "Model/InputOutput/MonteCarloParams.cuh"
 #include "Facades/OptionPricingFacade.cuh"
-#include "Model/Options/AutocallableOption/AutocallableOption2.cuh"
-#include "Model/Options/EuropeanOption/EuropeanOption.cuh"
+#include "Model/Options/EuropeanOption/EuropeanOptionImpl/EuropeanOptionGPU.cuh"
+#include "Model/Options/EuropeanOption/EuropeanOptionImpl/EuropeanOptionAnalytical.cuh"
+#include "Model/Options/EuropeanOption/EuropeanOptionImpl/EuropeanOptionSerialCPU.cuh"
+#include "Model/Options/AutocallableOption/AutoCallableOptionImpl/AutoCallableOptionGPU.cuh"
+#include "Model/Options/AutocallableOption/AutoCallableOptionImpl/AutoCallableOptionCPU.cuh"
 #include "Facades/OptionPricingAnalysisFacade.cuh"
-#include "Model/Options/EuropeanOption/EuropeanOption.cuh"
-#include "Model/Options/EuropeanOption/EuropeanOptionGPU.cuh"
-#include "Model/Options/EuropeanOption/EuropeanOptionAnalytical.cuh"
-#include "Model/Options/EuropeanOption/EuropeanOptionSerialCPU.cuh"
+#include "Utils/ContextGPU.cuh"
 
 #include <iostream>
 
@@ -113,8 +113,12 @@ void testAutoCallable(){
  */
 
 void europeanOptionTest(){
-    GPUParams *gpuParams = new GPUParams(256);
-    MonteCarloParams *monteCarloParams = new MonteCarloParams(12e4, 0);
+    int nSimulations = 1e8;
+    int threadsPerBlock = 512;
+    int nBlocksPerGrid = ceil(float(nSimulations)/threadsPerBlock);
+
+    GPUParams *gpuParams = new GPUParams((dim3(threadsPerBlock)), dim3(nBlocksPerGrid));
+    MonteCarloParams *monteCarloParams = new MonteCarloParams(1e8, 0);
 
     Asset *asset = new Asset(100.0f, 0.3f, 0.03f);
     EuropeanOptionGPU europeanOptiongpu(asset, 100.0f, 1.0f, monteCarloParams, gpuParams);
@@ -124,7 +128,7 @@ void europeanOptionTest(){
     EuropeanOptionAnalytical europeanOptionAnalytical(asset, 100.0, 1.0f);
     cout << "BlackSholes: " << (Result) europeanOptionAnalytical.callPayoff() << endl;
 
-    EuropeanOptionSerialCPU europeanOptionSerialCpu(asset, 100.0f, 1.0f, monteCarloParams, gpuParams);
+    EuropeanOptionSerialCPU europeanOptionSerialCpu(asset, 100.0f, 1.0f, monteCarloParams);
     cout << "Call CPU simulation: " << europeanOptionSerialCpu.callPayoff() << endl;
 
     /*s = europeanOption.callPayoffSerialCPU();
@@ -170,6 +174,7 @@ void testAutocallable2(){
     cout << "Call CPU simulation: " << option.callPayoffMontecarloCpu() << endl;
 }
 */
+
 void testEuropeanOptions2(){
     OptionPricingFacade optionPricingFacade;
     vector<SimulationResult> results = optionPricingFacade.executeEuropeanCalls();
@@ -179,7 +184,44 @@ void testEuropeanOptions2(){
     }
 }
 
+void testAutoCallableOptions2(){
+    Asset asset(100.0f, 0.3f, 0.3f);
+    int n_binary_option = 3;
+
+    std::vector<float> observationDates(n_binary_option);
+    observationDates[0] = 0.2f;
+    observationDates[1] = 0.4f;
+    observationDates[2] = 1.0f;
+
+    std::vector<float> barriers(n_binary_option);
+    barriers[0] = 120.0f;
+    barriers[1] = 130.0f;
+    barriers[2] = 130.0f;
+
+    std::vector<float> payoffs(n_binary_option);
+    payoffs[0] = 10.0f;
+    payoffs[1] = 20.0f;
+    payoffs[2] = 40.0f;
+
+    int nSimulations = 1e6;
+    int threadsPerBlock = 512;
+    int nBlocksPerGrid = ceil(float(nSimulations)/threadsPerBlock);
+    GPUParams gpuParams((dim3(threadsPerBlock)), dim3(nBlocksPerGrid));
+
+    MonteCarloParams monteCarloParams(nSimulations, 0);
+
+    AutoCallableOptionGPU optionG(&asset, 50.0f, observationDates, barriers, payoffs,&monteCarloParams, &gpuParams);
+    cout << "AutoCallable GPU: " << optionG.callPayoff() << endl;
+
+    AutoCallableOptionCPU optionC(&asset, 50.0f, observationDates, barriers, payoffs,&monteCarloParams);
+    cout << "AutoCallable CPU: " << optionC.callPayoff() << endl;
+
+}
+
 int main() {
+    ContextGPU context;
+    context.printProperties();
+
     OptionPricingAnalysisFacade facade;
-    facade.executeAnalysis();
+    facade.europeanOptionsErrorTrendSimulations();
 }

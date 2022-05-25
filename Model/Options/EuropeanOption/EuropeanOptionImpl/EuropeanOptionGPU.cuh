@@ -5,7 +5,7 @@
 #ifndef OPTIONPRICING_EUROPEANOPTIONGPU_CUH
 #define OPTIONPRICING_EUROPEANOPTIONGPU_CUH
 
-#include "EuropeanOption.cuh"
+#include "../EuropeanOption.cuh"
 
 class EuropeanOptionGPU : public EuropeanOption{
 protected:
