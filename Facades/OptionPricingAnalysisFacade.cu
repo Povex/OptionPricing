@@ -345,7 +345,7 @@ void OptionPricingAnalysisFacade::autoCallableAsymptoticLimitsAnalysis() {
 void OptionPricingAnalysisFacade::autoCallableNObservationDates() {
     cout << "\n [Running] - AutoCallable option time varying the number of observation dates, please wait...\n";
 
-    int nSimulations = pow(2, 24);
+    int nSimulations = 1e6;
     dim3 threadsPerBlock(512);
     dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
     GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
@@ -369,9 +369,10 @@ void OptionPricingAnalysisFacade::autoCallableNObservationDates() {
     float dailyDt = 1.0f/365;
     float currTime = 0.0f;
     float expected;
+    double maxCpuTime = -1.0;
 
-    for (int i = 1; i < 10; i++){ // n observation dates i
-        cout << "N obs date: " << i << " ";
+    for (int i = 1; i < 365; i++){ // n observation dates i
+        cout << "N obs date: " << i << endl;
         int nBinaryOptions = i;
         observationDates.push_back(dailyDt);
         payoffs.push_back(10.0f);
@@ -379,15 +380,22 @@ void OptionPricingAnalysisFacade::autoCallableNObservationDates() {
 
         expected = 50.0f * exp(-0.03f * observationDates.back());
 
-        optionSerialCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
-        SimulationResult serialCpuResultC = optionSerialCPU->callPayoff();
+        if(nBinaryOptions < 128) {
+            optionSerialCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs,
+                                                        &monteCarloParams);
+            SimulationResult serialCpuResultC = optionSerialCPU->callPayoff();
+            if(maxCpuTime < serialCpuResultC.getTimeElapsed()) maxCpuTime = serialCpuResultC.getTimeElapsed();
+
+            myFile << "AutoCallableCall" << sep << nSimulations << sep << "SerialCPU" << sep << nBinaryOptions
+                       << sep
+                       << serialCpuResultC.getValue() << sep << serialCpuResultC.getStdError()
+                       << sep << serialCpuResultC.getConfidence()[0] << sep << serialCpuResultC.getConfidence()[1]
+                       << sep << serialCpuResultC.getTimeElapsed() << sep << expected << "\n";
+        }
 
         optionGPU = new AutoCallableOptionGPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams, &gpuParams);
         SimulationResult gpuResultC = optionGPU->callPayoff();
 
-        myFile << "AutoCallableCall" << sep << nSimulations << sep <<"SerialCPU" << sep << nBinaryOptions << sep << serialCpuResultC.getValue() << sep << serialCpuResultC.getStdError()
-               << sep << serialCpuResultC.getConfidence()[0] << sep << serialCpuResultC.getConfidence()[1]
-               << sep << serialCpuResultC.getTimeElapsed() << sep << expected << "\n";
         myFile << "AutoCallableCall" << sep << nSimulations << sep << "GPU" << sep << nBinaryOptions << sep << gpuResultC.getValue() << sep << gpuResultC.getStdError()
                << sep << gpuResultC.getConfidence()[0] << sep << gpuResultC.getConfidence()[1]
                << sep << gpuResultC.getTimeElapsed() << sep << expected << "\n";

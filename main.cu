@@ -207,21 +207,17 @@ void testAutoCallableOptions2(){
     dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
     GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
 
-    AutoCallableOptionGPU optionG(&asset, 50.0f, observationDates, barriers, payoffs,&monteCarloParams, &gpuParams);
-    cout << "AutoCallable GPU: " << optionG.callPayoff() << endl;
-
     AutoCallableOptionCPU optionC(&asset, 50.0f, observationDates, barriers, payoffs,&monteCarloParams);
     cout << "AutoCallable CPU: " << optionC.callPayoff() << endl;
 
-
+    AutoCallableOptionGPU optionG(&asset, 50.0f, observationDates, barriers, payoffs,&monteCarloParams, &gpuParams);
+    cout << "AutoCallable GPU: " << optionG.callPayoff() << endl;
 }
 
 int main() {
     ContextGPU context;
     context.printProperties();
 
-    // OptionPricingAnalysisFacade facade;
-    // facade.autoCallableAsymptoticLimitsAnalysis();
-
-    testAutoCallableOptions2();
+    OptionPricingAnalysisFacade facade;
+    facade.autoCallableNObservationDates();
 }

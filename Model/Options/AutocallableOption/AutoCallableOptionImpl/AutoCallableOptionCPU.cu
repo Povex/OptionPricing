@@ -41,12 +41,9 @@ SimulationResult AutoCallableOptionCPU::callPayoff() {
     curandGenerator_t generator;
     curandCreateGenerator(&generator, monteCarloParams->getRngType());
     curandSetPseudoRandomGeneratorSeed(generator, monteCarloParams->getSeed());
-    curandGenerateNormal(generator, d_normals, N_SIMULATIONS, 0.0f, 1.0f);
-    cudaMemcpy(h_normals, d_normals, N_SIMULATIONS * observationDates.size(), cudaMemcpyDeviceToHost);
+    curandGenerateNormal(generator, d_normals, N_SIMULATIONS * observationDates.size(), 0.0f, 1.0f);
 
-    // Clean memory from PRNG
-    curandDestroyGenerator(generator);
-    cudaFree(d_normals);
+    cudaMemcpy(h_normals, d_normals, N_SIMULATIONS * observationDates.size(), cudaMemcpyDeviceToHost);
 
     float *ptr_observationDates = observationDates.data();
     float *ptr_barriers = barriers.data();
@@ -82,6 +79,8 @@ SimulationResult AutoCallableOptionCPU::callPayoff() {
     SimulationResult result(statistics.getMean(), statistics.getConfidence(), statistics.getStdError(), elapsedTime);
 
     free(h_normals);
+    curandDestroyGenerator(generator);
+    cudaFree(d_normals);
 
     return result;
 }
