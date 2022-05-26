@@ -4,22 +4,37 @@
 
 #include "MonteCarloParams.cuh"
 
-MonteCarloParams::MonteCarloParams(int nSimulations, int prngType) : nSimulations(nSimulations), PRNGType(prngType) {}
+#include <curand.h>
+
+
+MonteCarloParams::MonteCarloParams(int nSimulations, curandRngType rngType, unsigned long long int seed) : nSimulations(
+        nSimulations), rngType(rngType), seed(seed) {}
 
 int MonteCarloParams::getNSimulations() const {
     return nSimulations;
 }
 
 void MonteCarloParams::setNSimulations(int nSimulations) {
-    MonteCarloParams::nSimulations = nSimulations;
+    this->nSimulations = nSimulations;
 }
 
-int MonteCarloParams::getPrngType() const {
-    return PRNGType;
+
+curandRngType MonteCarloParams::getRngType() const {
+    return rngType;
 }
 
-void MonteCarloParams::setPrngType(int prngType) {
-    PRNGType = prngType;
+void MonteCarloParams::setRngType(curandRngType rngType) {
+    this->rngType = rngType;
 }
+
+unsigned long long int MonteCarloParams::getSeed() const {
+    return seed;
+}
+
+void MonteCarloParams::setSeed(unsigned long long int seed) {
+    this->seed = seed;
+}
+
+
 
 

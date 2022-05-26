@@ -6,13 +6,18 @@
 #define OPTIONPRICING_MONTECARLOPARAMS_CUH
 
 
+#include <curand.h>
+
 class MonteCarloParams {
-private:
+protected:
     int nSimulations;
 
-    int PRNGType;
+    curandRngType rngType;
+
+    unsigned long long seed;
+
 public:
-    MonteCarloParams(int nSimulations, int prngType);
+    MonteCarloParams(int nSimulations, curandRngType rngType, unsigned long long int seed);
 
     ~MonteCarloParams() = default;
 
@@ -20,9 +25,13 @@ public:
 
     void setNSimulations(int nSimulations);
 
-    int getPrngType() const;
+    curandRngType getRngType() const;
 
-    void setPrngType(int prngType);
+    void setRngType(curandRngType rngType);
+
+    unsigned long long int getSeed() const;
+
+    void setSeed(unsigned long long int seed);
 
 };
 

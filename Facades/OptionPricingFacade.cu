@@ -56,7 +56,7 @@ vector<SimulationResult> OptionPricingFacade::executeEuropeanCalls() {
         int nBlocksPerGrid = ceil(float(nSimulations)/threadsPerBlock);
         GPUParams gpuParams((dim3(threadsPerBlock)), dim3(nBlocksPerGrid));
 
-        MonteCarloParams monteCarloParams(12e4, 0);
+        MonteCarloParams monteCarloParams(12e4, CURAND_RNG_PSEUDO_DEFAULT, 42ULL);
         Asset asset(spotPrice, volatility, riskFreeRate);
         auto *option = new EuropeanOptionGPU(&asset, strikePrice, timeToMaturity, &monteCarloParams, &gpuParams);
         results.push_back(option->callPayoff());
@@ -106,7 +106,7 @@ vector<SimulationResult> OptionPricingFacade::executeAutoCallableCalls() {
         int nBlocksPerGrid = ceil(float(nSimulations)/threadsPerBlock);
         GPUParams gpuParams((dim3(threadsPerBlock)), dim3(nBlocksPerGrid));
 
-        MonteCarloParams monteCarloParams(nSimulations, 0);
+        MonteCarloParams monteCarloParams(nSimulations, CURAND_RNG_PSEUDO_DEFAULT, 42ULL);
         Asset asset(spotPrice, volatility, riskFreeRate);
         auto *option = new EuropeanOptionGPU(&asset, strikePrice, timeToMaturity, &monteCarloParams, &gpuParams);
         results.push_back(option->callPayoff());

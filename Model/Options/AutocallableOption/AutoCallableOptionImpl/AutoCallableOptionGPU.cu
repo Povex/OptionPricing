@@ -12,6 +12,8 @@
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <thrust/reduce.h>
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 
 #include "../../../Utilities/errorHandler.cu"
 
@@ -76,30 +78,19 @@ SimulationResult AutoCallableOptionGPU::callPayoff() {
     // Initialize GPU params
     const int N_SIMULATION = getMonteCarloParams()->getNSimulations();
 
-    int threadsPerBlock = 512;
-    int nBlocksPerGrid = ceil(float(N_SIMULATION)/threadsPerBlock);
-    GPUParams gpuParams((dim3(threadsPerBlock)), dim3(nBlocksPerGrid));
-
-    /*
-    dim3 blockDim1D(getGpuParams()->getNThreads());
-    dim3 gridDim1D(std::ceil(float(getMonteCarloParams()->getNSimulations())/float(blockDim1D.x)));
-    const int GPU_MAX_BLOCKS = 65535;
-    const int GPU_MAX_THREADS = GPU_MAX_BLOCKS * 1024;
-    if(N_SIMULATION > GPU_MAX_THREADS) gridDim1D = dim3(GPU_MAX_BLOCKS);
-    */
-
     // Initialize host-device vectors
     thrust::host_vector<float> h_samples(N_SIMULATION);
     thrust::device_vector<float> d_samples = h_samples;
-    size_t size = sizeof(float) * N_SIMULATION;
-    thrust::device_vector<float> d_normals(size * observationDates.size());
+
+    size_t size = sizeof(float) * N_SIMULATION * observationDates.size();
+    thrust::device_vector<float> d_normals(N_SIMULATION * observationDates.size());
     float *ptr_normals = thrust::raw_pointer_cast(d_normals.data());
     float *ptr_samples = thrust::raw_pointer_cast(d_samples.data());
 
     // Create PRNG
     curandGenerator_t generator;
-    curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_DEFAULT);
-    curandSetPseudoRandomGeneratorSeed(generator, 42ULL);
+    curandCreateGenerator(&generator, monteCarloParams->getRngType());
+    curandSetPseudoRandomGeneratorSeed(generator, monteCarloParams->getSeed());
     curandGenerateNormal(generator, ptr_normals,  N_SIMULATION * observationDates.size(), 0.0f, 1.0f);
 
     // Start timer
@@ -119,7 +110,7 @@ SimulationResult AutoCallableOptionGPU::callPayoff() {
     cudaMalloc((void**)&d_payoffs, observationSize);
     cudaMemcpy(d_payoffs, payoffs.data(), observationSize, cudaMemcpyHostToDevice);
 
-    KernelAutoCallableCallPayoff<<< gpuParams.getBlocksPerGrid(), gpuParams.getThreadsPerBlock()>>>(
+    KernelAutoCallableCallPayoff<<< gpuParams->getBlocksPerGrid(), gpuParams->getThreadsPerBlock()>>>(
             getAsset()->getSpotPrice(),
             getAsset()->getRiskFreeRate(),
             getAsset()->getVolatility(),
@@ -138,7 +129,7 @@ SimulationResult AutoCallableOptionGPU::callPayoff() {
     // Clean memory from PRNG
     curandDestroyGenerator(generator);
 
-    StatisticUtilsGPU statistics(gpuParams.getThreadsPerBlock(), gpuParams.getBlocksPerGrid(), d_samples);
+    StatisticUtilsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
     statistics.calcMean();
     statistics.calcCI();
 

@@ -37,8 +37,8 @@ SimulationResult EuropeanOptionSerialCPU::callPayoff() {
     cudaMalloc((void **)&d_normals, size);
 
     curandGenerator_t generator;
-    curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_DEFAULT);
-    curandSetPseudoRandomGeneratorSeed(generator, 42ULL);
+    curandCreateGenerator(&generator, monteCarloParams->getRngType());
+    curandSetPseudoRandomGeneratorSeed(generator, monteCarloParams->getSeed());
     curandGenerateNormal(generator, d_normals, N_SIMULATIONS, 0.0f, 1.0f);
     cudaMemcpy(h_normals, d_normals, size, cudaMemcpyDeviceToHost);
 
@@ -77,8 +77,8 @@ SimulationResult EuropeanOptionSerialCPU::putPayoff() {
     cudaMalloc((void **)&d_normals, size);
 
     curandGenerator_t generator;
-    curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_DEFAULT);
-    curandSetPseudoRandomGeneratorSeed(generator, 42ULL);
+    curandCreateGenerator(&generator, monteCarloParams->getRngType());
+    curandSetPseudoRandomGeneratorSeed(generator, monteCarloParams->getSeed());
     curandGenerateNormal(generator, d_normals, N_SIMULATIONS, 0.0f, 1.0f);
     cudaMemcpy(h_normals, d_normals, size, cudaMemcpyDeviceToHost);
 

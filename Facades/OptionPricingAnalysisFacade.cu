@@ -26,17 +26,21 @@ using namespace std;
 void OptionPricingAnalysisFacade::executeAnalysis() {
     europeanOptionsComparisonsImpl();
     europeanOptionsErrorTrendSimulations();
+    europeanOptionsExecTimeMultipleOptions();
+    europeanOptionTimeGpuParams();
+
+    autoCallableAsymptoticLimitsAnalysis();
 }
 
 void OptionPricingAnalysisFacade::europeanOptionsComparisonsImpl() {
     cout << "\n\n [Running] - European option comparisons, please wait...\n";
 
     int nSimulations = 1e8;
-    int threadsPerBlock = 512;
-    int nBlocksPerGrid = ceil(float(nSimulations)/threadsPerBlock);
-    GPUParams gpuParams((dim3(threadsPerBlock)), dim3(nBlocksPerGrid));
+    dim3 threadsPerBlock(512);
+    dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
+    GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
 
-    MonteCarloParams monteCarloParams(nSimulations, 0);
+    MonteCarloParams monteCarloParams(nSimulations, CURAND_RNG_PSEUDO_DEFAULT, 43ULL);
     Asset asset(100.0f, 0.25f, 0.01f);
 
     float strikePrice = 100;
@@ -108,7 +112,7 @@ void OptionPricingAnalysisFacade::europeanOptionsErrorTrendSimulations() {
     int nSimulations = 0;
     for(int i=0; i<28; i++){
         nSimulations = pow(2, i);
-        monteCarloParams = new MonteCarloParams(nSimulations, 0);
+        monteCarloParams = new MonteCarloParams(nSimulations, CURAND_RNG_PSEUDO_DEFAULT, 42ULL);
         dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
 
         GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
@@ -146,12 +150,12 @@ void OptionPricingAnalysisFacade::europeanOptionsErrorTrendSimulations() {
 void OptionPricingAnalysisFacade::europeanOptionsExecTimeMultipleOptions(){
     cout << "\n [Running] - European option batch simulations, please wait...\n";
 
-    int nSimulations = pow(2, 24);;
-    int threadsPerBlock = 512;
-    int nBlocksPerGrid = ceil(float(nSimulations)/threadsPerBlock);
-    GPUParams gpuParams((dim3(threadsPerBlock)), dim3(nBlocksPerGrid));
+    int nSimulations = pow(2, 26);
+    dim3 threadsPerBlock(512);
+    dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
+    GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
 
-    MonteCarloParams monteCarloParams(nSimulations, 0);
+    MonteCarloParams monteCarloParams(nSimulations, CURAND_RNG_PSEUDO_DEFAULT, 42ULL);
     Asset asset(100.0f, 0.25f, 0.01f);
     float strikePrice = 100.0f;
     float timeToMaturity = 1.0f;
@@ -208,7 +212,7 @@ void OptionPricingAnalysisFacade::europeanOptionTimeGpuParams() {
         dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
 
         GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
-        MonteCarloParams monteCarloParams(nSimulations, 0);
+        MonteCarloParams monteCarloParams(nSimulations, CURAND_RNG_PSEUDO_DEFAULT, 42ULL);
 
         cout << "blockDim" << threadsPerBlock.x << " GridDim" << blocksPerGrid.x << endl;
 
@@ -235,7 +239,7 @@ void OptionPricingAnalysisFacade::autoCallableAsymptoticLimitsAnalysis() {
     GPUParams gpuParams((dim3(threadsPerBlock)), dim3(nBlocksPerGrid));
 
     // barriers[0] = 0 -> payoff = discounted(payoffs[0])
-    MonteCarloParams monteCarloParams(nSimulations, 0);
+    MonteCarloParams monteCarloParams(nSimulations, CURAND_RNG_PSEUDO_DEFAULT, 42ULL);
     Asset asset(100.0f, 0.3f, 0.03f);
 
     int n_binary_option = 3;
@@ -336,6 +340,60 @@ void OptionPricingAnalysisFacade::autoCallableAsymptoticLimitsAnalysis() {
            << sep << gpuResultC.getTimeElapsed() << sep << expected << "\n";
 
     myFile.close();
+}
+
+void OptionPricingAnalysisFacade::autoCallableNObservationDates() {
+    cout << "\n [Running] - AutoCallable option time varying the number of observation dates, please wait...\n";
+
+    int nSimulations = pow(2, 24);
+    dim3 threadsPerBlock(512);
+    dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
+    GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
+
+    MonteCarloParams monteCarloParams(nSimulations, CURAND_RNG_PSEUDO_DEFAULT, 42ULL);
+    Asset asset(100.0f, 0.3f, 0.03f);
+
+    AutoCallableOption *optionSerialCPU, *optionGPU;
+
+    string gpuName = ContextGPU::instance()->getDeviceProp().name;
+    string date = DateUtils().getDate();
+    string filename = gpuName + " " + date;
+    string sep = ",";
+
+    std::ofstream myFile("AnalysisData/AutoCallableOption/TimeVaryingObservationDates/Output/" + filename + ".csv");
+    myFile << "Type,nSimulations,Engine,nBinaryOptions,value,stdError, confidence1, confidence2,timeElapsed, expected\n";
+
+    std::vector<float> observationDates;
+    std::vector<float> payoffs;
+    std::vector<float> barriers;
+    float dailyDt = 1.0f/365;
+    float currTime = 0.0f;
+    float expected;
+
+    for (int i = 1; i < 10; i++){ // n observation dates i
+        cout << "N obs date: " << i << " ";
+        int nBinaryOptions = i;
+        observationDates.push_back(dailyDt);
+        payoffs.push_back(10.0f);
+        barriers.push_back(std::numeric_limits<float>::infinity());
+
+        expected = 50.0f * exp(-0.03f * observationDates.back());
+
+        optionSerialCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
+        SimulationResult serialCpuResultC = optionSerialCPU->callPayoff();
+
+        optionGPU = new AutoCallableOptionGPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams, &gpuParams);
+        SimulationResult gpuResultC = optionGPU->callPayoff();
+
+        myFile << "AutoCallableCall" << sep << nSimulations << sep <<"SerialCPU" << sep << nBinaryOptions << sep << serialCpuResultC.getValue() << sep << serialCpuResultC.getStdError()
+               << sep << serialCpuResultC.getConfidence()[0] << sep << serialCpuResultC.getConfidence()[1]
+               << sep << serialCpuResultC.getTimeElapsed() << sep << expected << "\n";
+        myFile << "AutoCallableCall" << sep << nSimulations << sep << "GPU" << sep << nBinaryOptions << sep << gpuResultC.getValue() << sep << gpuResultC.getStdError()
+               << sep << gpuResultC.getConfidence()[0] << sep << gpuResultC.getConfidence()[1]
+               << sep << gpuResultC.getTimeElapsed() << sep << expected << "\n";
+
+        currTime += dailyDt;
+    }
 }
 
 

@@ -33,17 +33,19 @@ SimulationResult AutoCallableOptionCPU::callPayoff() {
     const int N_SIMULATIONS = getMonteCarloParams()->getNSimulations();
     float *samples = (float *)malloc(sizeof(float) * N_SIMULATIONS);
 
-    size_t size = sizeof(float) * N_SIMULATIONS;
+    size_t size = sizeof(float) * N_SIMULATIONS * observationDates.size();
     float *h_normals = (float *) malloc(size);
     float *d_normals = nullptr;
     cudaMalloc((void **)&d_normals, size);
 
     curandGenerator_t generator;
-    curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_DEFAULT);
-    curandSetPseudoRandomGeneratorSeed(generator, 42ULL);
+    curandCreateGenerator(&generator, monteCarloParams->getRngType());
+    curandSetPseudoRandomGeneratorSeed(generator, monteCarloParams->getSeed());
     curandGenerateNormal(generator, d_normals, N_SIMULATIONS, 0.0f, 1.0f);
-    cudaMemcpy(h_normals, d_normals, size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_normals, d_normals, N_SIMULATIONS * observationDates.size(), cudaMemcpyDeviceToHost);
 
+    // Clean memory from PRNG
+    curandDestroyGenerator(generator);
     cudaFree(d_normals);
 
     float *ptr_observationDates = observationDates.data();

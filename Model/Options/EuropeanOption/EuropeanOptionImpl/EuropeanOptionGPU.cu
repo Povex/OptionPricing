@@ -8,7 +8,7 @@
 #include "../../../Utilities/errorHandler.cu"
 #include "../../../Utilities/StatisticUtils/StatisticUtilsGPU.cuh"
 
-#include <cmath>
+
 #include <ctime>
 #include <cuda_runtime.h>
 #include <curand.h>
@@ -112,8 +112,8 @@ SimulationResult EuropeanOptionGPU::callPayoff() {
 
     // Create PRNG
     curandGenerator_t generator;
-    curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_DEFAULT);
-    curandSetPseudoRandomGeneratorSeed(generator, 42ULL);
+    curandCreateGenerator(&generator, monteCarloParams->getRngType());
+    curandSetPseudoRandomGeneratorSeed(generator, monteCarloParams->getSeed());
     curandGenerateNormal(generator, ptr_normals, N_SIMULATION, 0.0f, 1.0f);
 
     // Start timer
@@ -150,18 +150,7 @@ SimulationResult EuropeanOptionGPU::callPayoff() {
 }
 
 SimulationResult EuropeanOptionGPU::putPayoff() {
-    // Initialize GPU params
     const int N_SIMULATION = getMonteCarloParams()->getNSimulations();
-
-
-
-    /*
-    dim3 blockDim1D(getGpuParams()->getNThreads());
-    dim3 gridDim1D(std::ceil(float(getMonteCarloParams()->getNSimulations())/float(blockDim1D.x)));
-    const int GPU_MAX_BLOCKS = 65535;
-    const int GPU_MAX_THREADS = GPU_MAX_BLOCKS * 1024;
-    if(gridDim1D.x > GPU_MAX_THREADS) gridDim1D.x = GPU_MAX_BLOCKS;
-     */
 
     // Initialize host-device vectors
     thrust::host_vector<float> h_samples(N_SIMULATION);
@@ -173,8 +162,8 @@ SimulationResult EuropeanOptionGPU::putPayoff() {
 
     // Create PRNG
     curandGenerator_t generator;
-    curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_DEFAULT);
-    curandSetPseudoRandomGeneratorSeed(generator, 42ULL);
+    curandCreateGenerator(&generator, monteCarloParams->getRngType());
+    curandSetPseudoRandomGeneratorSeed(generator, monteCarloParams->getSeed());
     curandGenerateNormal(generator, ptr_normals, N_SIMULATION, 0.0f, 1.0f);
 
     // Start timer

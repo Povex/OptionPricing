@@ -113,15 +113,14 @@ void testAutoCallable(){
  */
 
 void europeanOptionTest(){
-    int nSimulations = 1e8;
-    int threadsPerBlock = 512;
-    int nBlocksPerGrid = ceil(float(nSimulations)/threadsPerBlock);
-
-    GPUParams *gpuParams = new GPUParams((dim3(threadsPerBlock)), dim3(nBlocksPerGrid));
-    MonteCarloParams *monteCarloParams = new MonteCarloParams(1e8, 0);
+    int nSimulations = pow(2, 26);
+    dim3 threadsPerBlock(512);
+    dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
+    GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
+    MonteCarloParams *monteCarloParams = new MonteCarloParams(nSimulations, CURAND_RNG_QUASI_SOBOL64, 42ULL);
 
     Asset *asset = new Asset(100.0f, 0.3f, 0.03f);
-    EuropeanOptionGPU europeanOptiongpu(asset, 100.0f, 1.0f, monteCarloParams, gpuParams);
+    EuropeanOptionGPU europeanOptiongpu(asset, 100.0f, 1.0f, monteCarloParams, &gpuParams);
 
     cout << "Call GPU simulation: " << europeanOptiongpu.callPayoff() << endl;
 
@@ -186,29 +185,27 @@ void testEuropeanOptions2(){
 
 void testAutoCallableOptions2(){
     Asset asset(100.0f, 0.3f, 0.3f);
-    int n_binary_option = 3;
+    int n_binary_option = 365;
 
-    std::vector<float> observationDates(n_binary_option);
-    observationDates[0] = 0.2f;
-    observationDates[1] = 0.4f;
-    observationDates[2] = 1.0f;
+    std::vector<float> observationDates;
+    std::vector<float> barriers;
+    std::vector<float> payoffs;
 
-    std::vector<float> barriers(n_binary_option);
-    barriers[0] = 120.0f;
-    barriers[1] = 130.0f;
-    barriers[2] = 130.0f;
+    float dt = 1.0f/365;
+    float currTime = dt;
+    for (int i=0; i<n_binary_option; i++){
+        observationDates.push_back(currTime);
+        barriers.push_back(150.0f);
+        payoffs.push_back(140.0f);
 
-    std::vector<float> payoffs(n_binary_option);
-    payoffs[0] = 10.0f;
-    payoffs[1] = 20.0f;
-    payoffs[2] = 40.0f;
+        currTime += dt;
+    }
 
     int nSimulations = 1e6;
-    int threadsPerBlock = 512;
-    int nBlocksPerGrid = ceil(float(nSimulations)/threadsPerBlock);
-    GPUParams gpuParams((dim3(threadsPerBlock)), dim3(nBlocksPerGrid));
-
-    MonteCarloParams monteCarloParams(nSimulations, 0);
+    MonteCarloParams monteCarloParams(nSimulations, CURAND_RNG_PSEUDO_DEFAULT, 42ULL);
+    dim3 threadsPerBlock(512);
+    dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
+    GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
 
     AutoCallableOptionGPU optionG(&asset, 50.0f, observationDates, barriers, payoffs,&monteCarloParams, &gpuParams);
     cout << "AutoCallable GPU: " << optionG.callPayoff() << endl;
@@ -216,12 +213,15 @@ void testAutoCallableOptions2(){
     AutoCallableOptionCPU optionC(&asset, 50.0f, observationDates, barriers, payoffs,&monteCarloParams);
     cout << "AutoCallable CPU: " << optionC.callPayoff() << endl;
 
+
 }
 
 int main() {
     ContextGPU context;
     context.printProperties();
 
-    OptionPricingAnalysisFacade facade;
-    facade.europeanOptionsErrorTrendSimulations();
+    // OptionPricingAnalysisFacade facade;
+    // facade.autoCallableAsymptoticLimitsAnalysis();
+
+    testAutoCallableOptions2();
 }

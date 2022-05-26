@@ -3,20 +3,11 @@
 //
 
 #include <thrust/reduce.h>
+#include <thrust/transform_reduce.h>
 #include "StatisticUtilsGPU.cuh"
 #include "../errorHandler.cu"
 
-/*
-//define transformation f(x) -> x^2
- struct square {
- __host__ __device__ floatoperator()(float x)
- { return x * x;     }
- };
- float snrm2_fast(device_vector<float>& x)
- { // with fusion return sqrt
- (
- transform_reduce(x.begin(), x.end(), square(), 0.0f, plus<float>()); }
-*/
+
 
  __global__
 void varianceKernel(float *samples, int n, float mean){

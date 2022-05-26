@@ -18,6 +18,8 @@ public:
     void europeanOptionsExecTimeMultipleOptions();
 
     void autoCallableAsymptoticLimitsAnalysis();
+
+    void autoCallableNObservationDates();
 };
 
 
