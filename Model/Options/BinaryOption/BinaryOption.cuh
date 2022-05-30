@@ -1,31 +1,35 @@
 //
-// Created by marco on 07/05/22.
+// Created by marco on 30/05/22.
 //
 
 #ifndef OPTIONPRICING_BINARYOPTION_CUH
 #define OPTIONPRICING_BINARYOPTION_CUH
 
 
-#include "../../InputOutput/Asset.cuh"
-#include "../../InputOutput/SimulationResult.cuh"
+#include "../Option.cuh"
 
-class BinaryOption {
-
-public:
-    Asset asset;
-    float strike_price; // In this case is equal to payoff at time_to_maturity
-    float time_to_maturity; // [years]
+class BinaryOption : public Option {
+protected:
+    float timeToMaturity; // [years]
+    float barrier;
     float payoff;
+    float rebase;
+public:
+    BinaryOption(Asset *asset, float timeToMaturity, float barrier, float payoff, float rebase);
 
-    BinaryOption();
-    BinaryOption(Asset market, float strike_price, float time_to_maturity, float payoff);
-    BinaryOption(BinaryOption &option);
+    ~BinaryOption() = default;
 
-    float actual_call_payoff_blackSholes();
-    float actual_put_payoff_blackSholes();
+    float getTimeToMaturity() const;
 
-    float call_payoff_montecarlo_gpu(const int n_simulations);
-    float put_payoff_montecarlo_gpu(const int n_simulations);
+    void setTimeToMaturity(float timeToMaturity);
+
+    float getPayoff() const;
+
+    void setPayoff(float payoff);
+
+    float getRebase() const;
+
+    void setRebase(float rebase);
 
 };
 

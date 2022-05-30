@@ -39,7 +39,8 @@ void autoCallablePayoff(float spotPrice,
                         const float *barriers,
                         const float *payoffs,
                         int dateBarrierSize,
-                        unsigned int i){
+                        unsigned int i,
+                        const int n_path){
     bool barrier_hit = false;
     float S = spotPrice;
     int date_index = 0;
@@ -47,9 +48,9 @@ void autoCallablePayoff(float spotPrice,
 
     while (date_index <= dateBarrierSize - 1) {
         S = S * exp((riskFreeRate - (pow(volatility, 2) / 2)) * dt
-                    + volatility* sqrt(dt) * normals[i + date_index]);
+                    + volatility * sqrt(dt) * normals[date_index * n_path + i]);
 
-        if (S >= barriers[date_index]) { barrier_hit = true; break; }
+        if (S/spotPrice >= barriers[date_index]) { barrier_hit = true; break; }
 
         date_index++;
         dt = observationDates[date_index] - observationDates[date_index - 1];

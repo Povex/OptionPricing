@@ -6,7 +6,7 @@
 #define OPTIONPRICING_ASSET_CUH
 
 class Asset {
-private:
+protected:
     float spot_price;
 
     float volatility;
@@ -19,15 +19,15 @@ public:
 
     ~Asset() = default;
 
-    float getSpotPrice() const;
+    __host__ __device__ float getSpotPrice() const;
 
     void setSpotPrice(float spotPrice);
 
-    float getVolatility() const;
+    __host__ __device__ float getVolatility() const;
 
     void setVolatility(float volatility);
 
-    float getRiskFreeRate() const;
+    __host__ __device__ float getRiskFreeRate() const;
 
     void setRiskFreeRate(float riskFreeRate);
 

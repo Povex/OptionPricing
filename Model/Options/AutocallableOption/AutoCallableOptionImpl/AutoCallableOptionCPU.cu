@@ -11,7 +11,6 @@
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <curand_kernel.h>
-#include <chrono>
 
 AutoCallableOptionCPU::AutoCallableOptionCPU(Asset *asset, float rebase, const std::vector<float> &observationDates,
                                              const std::vector<float> &barriers, const std::vector<float> &payoffs,
@@ -52,18 +51,18 @@ SimulationResult AutoCallableOptionCPU::callPayoff() {
     // Start timer
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-    for(unsigned int i=0; i<N_SIMULATIONS; i++){
-        autoCallablePayoff( getAsset()->getSpotPrice(),
-                            getAsset()->getRiskFreeRate(),
-                            getAsset()->getVolatility(),
-                            rebase,
-                            samples,
-                            h_normals,
-                            ptr_observationDates,
-                            ptr_barriers,
-                            ptr_payoffs,
-                            observationDates.size(),
-                            i);
+    for(int i=0; i<N_SIMULATIONS; i++){
+        autoCallablePayoff(getAsset()->getSpotPrice(),
+                           getAsset()->getRiskFreeRate(),
+                           getAsset()->getVolatility(),
+                           rebase,
+                           samples,
+                           h_normals,
+                           ptr_observationDates,
+                           ptr_barriers,
+                           ptr_payoffs,
+                           observationDates.size(),
+                           i, N_SIMULATIONS);
 
     }
 

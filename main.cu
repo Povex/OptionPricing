@@ -53,7 +53,7 @@ void testEuropeanOption(){
 
 void testBinaryOption(){
     Asset asset(100.0f, 0.3f, 0.02f);
-    BinaryOption option(asset, 115.0f, 0.25f, 5.0f);
+    BinaryOptionToDelete option(asset, 115.0f, 0.25f, 5.0f);
 
     cout << "Actual call payoff motecarlo gpu: " << option.call_payoff_montecarlo_gpu(10000000) << endl;
     cout << "Actual put payoff montecarlo gpu: " << option.put_payoff_montecarlo_gpu(10000000) << endl;
@@ -195,7 +195,7 @@ void testAutoCallableOptions2(){
     float currTime = dt;
     for (int i=0; i<n_binary_option; i++){
         observationDates.push_back(currTime);
-        barriers.push_back(150.0f);
+        barriers.push_back(115.0f);
         payoffs.push_back(140.0f);
 
         currTime += dt;
@@ -219,5 +219,6 @@ int main() {
     context.printProperties();
 
     OptionPricingAnalysisFacade facade;
-    facade.autoCallableNObservationDates();
+    facade.autoCallableErrorDependenceNObsDates();
+
 }

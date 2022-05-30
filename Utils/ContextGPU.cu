@@ -132,6 +132,11 @@ const cudaDeviceProp &ContextGPU::getDeviceProp() const {
     return deviceProp;
 }
 
+
+
+/* What is the best parameters configuration ?
+ * https://forums.developer.nvidia.com/t/block-sizes-effect-on-program-performance-why-does-my-program-run-faster-at-seemingly-random-sizes/47069/2
+ */
 dim3 ContextGPU::getOptimalBlocksPerGrid(dim3 threadsPerBlock, unsigned int nSimulations) {
     int nBlocksPerGrid = ceil(float(nSimulations)/threadsPerBlock.x);
 

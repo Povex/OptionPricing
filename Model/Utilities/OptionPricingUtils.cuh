@@ -5,6 +5,7 @@
 #ifndef OPTIONPRICING_OPTIONPRICINGUTILS_H
 #define OPTIONPRICING_OPTIONPRICINGUTILS_H
 
+
 float next_price_exact(float currentPrice, float riskFreeRate, float volatility, float dt, float z){
     return currentPrice * exp((riskFreeRate - (pow(volatility, 2) / 2)) * dt + volatility * sqrt(dt) * z);
 }

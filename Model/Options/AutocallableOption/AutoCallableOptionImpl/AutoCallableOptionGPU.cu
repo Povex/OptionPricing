@@ -4,10 +4,9 @@
 
 #include <chrono>
 #include "AutoCallableOptionGPU.cuh"
-#include "../Shared/SharedFunctions.cuh"
 #include "../../../Utilities/StatisticUtils/StatisticUtilsGPU.cuh"
+#include "../Shared/SharedFunctions.cuh"
 
-#include <cmath>
 #include <ctime>
 #include <cuda_runtime.h>
 #include <curand.h>
@@ -18,6 +17,7 @@
 #include "../../../Utilities/errorHandler.cu"
 
 // --------------------------------------- BEGIN CUDA FUNCTIONS ---------------------------------
+
 
 __global__ void KernelAutoCallableCallPayoff(float spotPrice,
                                              float riskFreeRate,
@@ -31,7 +31,6 @@ __global__ void KernelAutoCallableCallPayoff(float spotPrice,
                                              const float *d_payoffs,
                                              int dateBarrierSize){
     unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
-    if(i >= n_paths) return;
 
     while(i < n_paths) {
         autoCallablePayoff(spotPrice,
@@ -44,7 +43,8 @@ __global__ void KernelAutoCallableCallPayoff(float spotPrice,
                            d_barriers,
                            d_payoffs,
                            dateBarrierSize,
-                           i);
+                           i,
+                           n_paths);
 
         i += blockDim.x * gridDim.x;
     }

@@ -20,6 +20,22 @@ public:
     void autoCallableAsymptoticLimitsAnalysis();
 
     void autoCallableNObservationDates();
+
+    void autoCallableOptionsErrorTrendSimulation();
+
+    void autoCallableExecTimeMultipleOptions();
+
+    void autoCallablePriceDependenceBarriersConstant();
+
+    void autoCallableErrorDependenceBarriersConstant();
+
+    void autoCallablePriceDependenceBarriersLinearIncreasing();
+
+    void autoCallablePriceDependenceBarriersLinearDecreasing();
+
+    void autoCallableErrorDependenceNObsDates();
+
+    void autoCallableCorrispondenceBinaryOption();
 };
 
 

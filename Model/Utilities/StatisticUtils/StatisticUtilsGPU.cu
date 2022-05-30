@@ -8,7 +8,6 @@
 #include "../errorHandler.cu"
 
 
-
  __global__
 void varianceKernel(float *samples, int n, float mean){
     unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
