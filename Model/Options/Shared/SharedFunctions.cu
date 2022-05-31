@@ -18,9 +18,9 @@ __host__ __device__
 float generateS_T(float spotPrice,
                   float riskFreeRate,
                   float volatility,
-                  float timeToMaturity,
+                  float dt,
                   float z){
 
     return spotPrice * expf((riskFreeRate - 0.5f * powf(volatility, 2))
-                            * timeToMaturity + volatility * sqrtf(timeToMaturity) * z);
+                            * dt + volatility * sqrtf(dt) * z);
 }

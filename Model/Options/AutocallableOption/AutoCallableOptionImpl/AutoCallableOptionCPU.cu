@@ -4,7 +4,7 @@
 
 #include <chrono>
 #include "AutoCallableOptionCPU.cuh"
-#include "../Shared/SharedFunctions.cuh"
+#include "../Shared/SharedAutoCallable.cuh"
 #include "../../../StatisticUtils/StatisticUtilsCPU.cuh"
 
 #include <ctime>

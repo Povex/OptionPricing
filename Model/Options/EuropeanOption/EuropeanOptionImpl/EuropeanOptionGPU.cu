@@ -3,7 +3,7 @@
 //
 
 #include "EuropeanOptionGPU.cuh"
-#include "../Shared/SharedFunctions.cuh"
+#include "../../Shared/SharedFunctions.cuh"
 
 #include "../../../../Utils/errorHandler.cu"
 #include "../../../StatisticUtils/StatisticUtilsGPU.cuh"

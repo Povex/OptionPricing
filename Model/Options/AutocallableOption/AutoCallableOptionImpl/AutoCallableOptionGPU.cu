@@ -4,7 +4,7 @@
 
 #include <chrono>
 #include "AutoCallableOptionGPU.cuh"
-#include "../Shared/SharedFunctions.cuh"
+#include "../Shared/SharedAutoCallable.cuh"
 
 #include <ctime>
 #include <cuda_runtime.h>

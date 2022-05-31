@@ -4,7 +4,7 @@
 
 
 #include "EuropeanOptionSerialCPU.cuh"
-#include "../Shared/SharedFunctions.cuh"
+#include "../../Shared/SharedFunctions.cuh"
 #include "../../../StatisticUtils/StatisticUtilsCPU.cuh"
 
 

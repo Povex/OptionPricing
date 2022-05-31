@@ -1,5 +1,6 @@
 
-#include "SharedFunctions.cuh"
+#include "SharedAutoCallable.cuh"
+#include "../../Shared/SharedFunctions.cuh"
 
 /**
  * @brief   Calculates the payoff for one single sample in the path.
@@ -47,8 +48,8 @@ void autoCallablePayoff(float spotPrice,
     float dt = observationDates[date_index];
 
     while (date_index <= dateBarrierSize - 1) {
-        S = S * exp((riskFreeRate - (pow(volatility, 2) / 2)) * dt
-                    + volatility * sqrt(dt) * normals[date_index * n_path + i]);
+        S = generateS_T(spotPrice, riskFreeRate,
+                        volatility, dt, normals[date_index * n_path + i]);
 
         if (S/spotPrice >= barriers[date_index]) { barrier_hit = true; break; }
 
