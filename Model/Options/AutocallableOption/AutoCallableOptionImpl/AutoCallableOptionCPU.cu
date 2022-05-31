@@ -5,7 +5,7 @@
 #include <chrono>
 #include "AutoCallableOptionCPU.cuh"
 #include "../Shared/SharedFunctions.cuh"
-#include "../../../Utilities/StatisticUtils/StatisticUtilsCPU.cuh"
+#include "../../../StatisticUtils/StatisticUtilsCPU.cuh"
 
 #include <ctime>
 #include <cuda_runtime.h>
@@ -42,7 +42,7 @@ SimulationResult AutoCallableOptionCPU::callPayoff() {
     curandSetPseudoRandomGeneratorSeed(generator, monteCarloParams->getSeed());
     curandGenerateNormal(generator, d_normals, N_SIMULATIONS * observationDates.size(), 0.0f, 1.0f);
 
-    cudaMemcpy(h_normals, d_normals, N_SIMULATIONS * observationDates.size(), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_normals, d_normals, size, cudaMemcpyDeviceToHost);
 
     float *ptr_observationDates = observationDates.data();
     float *ptr_barriers = barriers.data();

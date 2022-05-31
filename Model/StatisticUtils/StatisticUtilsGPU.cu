@@ -5,7 +5,7 @@
 #include <thrust/reduce.h>
 #include <thrust/transform_reduce.h>
 #include "StatisticUtilsGPU.cuh"
-#include "../errorHandler.cu"
+#include "../../Utils/errorHandler.cu"
 
 
  __global__

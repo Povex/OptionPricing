@@ -834,7 +834,7 @@ void OptionPricingAnalysisFacade::autoCallableCorrispondenceBinaryOption() {
     BinaryOption *binaryOption = new BinaryOptionAnalytical(&asset, timeToMaturity, barrier, payoff, rebase);
     double actualPayoff = exp(-asset.getRiskFreeRate() * timeToMaturity) * payoff * ((Result) binaryOption->callPayoff()).getValue();
 
-    int nSimulations = pow(2, 22);
+    int nSimulations = pow(2, 26);
     dim3 threadsPerBlock(512);
     dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
     GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
@@ -854,10 +854,16 @@ void OptionPricingAnalysisFacade::autoCallableCorrispondenceBinaryOption() {
     AutoCallableOption *autoCallableOption = new AutoCallableOptionGPU(&asset, 0.0f, observationDates, barriers, payoffs, &monteCarloParams, &gpuParams);
     SimulationResult result = autoCallableOption->callPayoff();
 
+    AutoCallableOption *autoCallableOptionC = new AutoCallableOptionCPU(&asset, 0.0f, observationDates, barriers, payoffs, &monteCarloParams);
+    SimulationResult resultC = autoCallableOptionC->callPayoff();
+
     myFile << "Type,Engine,nObsDates,value,nSimulations,stdError,confidence1,confidence2,timeElapsed[s]\n";
     myFile << "AutoCallableCall" << sep << "GPU" << sep << 1 << sep << result.getValue() << sep << nSimulations << sep << result.getStdError()
            << sep << result.getConfidence()[0] << sep << result.getConfidence()[1]
            << sep << result.getTimeElapsed() << "\n";
+    myFile << "AutoCallableCall" << sep << "CPU" << sep << 1 << sep << resultC.getValue() << sep << nSimulations << sep << resultC.getStdError()
+           << sep << resultC.getConfidence()[0] << sep << resultC.getConfidence()[1]
+           << sep << resultC.getTimeElapsed() << "\n";
     myFile << "BinaryOptionCall" << sep << "Analytical" << sep << 1 << sep << actualPayoff << "\n";
 
     myFile.close();

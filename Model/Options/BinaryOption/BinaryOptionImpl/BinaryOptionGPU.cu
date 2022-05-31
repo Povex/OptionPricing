@@ -4,8 +4,8 @@
 
 #include "BinaryOptionGPU.cuh"
 #include "../../EuropeanOption/Shared/SharedFunctions.cuh"
-#include "../../../Utilities/errorHandler.cu"
-#include "../../../Utilities/StatisticUtils/StatisticUtilsGPU.cuh"
+#include "../../../../Utils/errorHandler.cu"
+#include "../../../StatisticUtils/StatisticUtilsGPU.cuh"
 
 #include <ctime>
 #include <curand.h>
@@ -55,7 +55,6 @@ SimulationResult BinaryOptionGPU::callPayoff() {
     // Initialize host-device vectors
     thrust::host_vector<float> h_samples(N_SIMULATION);
     thrust::device_vector<float> d_samples = h_samples;
-    size_t size = sizeof(float) * N_SIMULATION;
     thrust::device_vector<float> d_normals(N_SIMULATION);
     float *ptr_normals = thrust::raw_pointer_cast(d_normals.data());
     float *ptr_samples = thrust::raw_pointer_cast(d_samples.data());
@@ -101,5 +100,5 @@ SimulationResult BinaryOptionGPU::callPayoff() {
 }
 
 SimulationResult BinaryOptionGPU::putPayoff() {
-
+return SimulationResult();
 }

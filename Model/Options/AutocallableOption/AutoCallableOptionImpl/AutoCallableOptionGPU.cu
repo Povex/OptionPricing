@@ -4,7 +4,6 @@
 
 #include <chrono>
 #include "AutoCallableOptionGPU.cuh"
-#include "../../../Utilities/StatisticUtils/StatisticUtilsGPU.cuh"
 #include "../Shared/SharedFunctions.cuh"
 
 #include <ctime>
@@ -14,7 +13,8 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
-#include "../../../Utilities/errorHandler.cu"
+#include "../../../../Utils/errorHandler.cu"
+#include "../../../StatisticUtils/StatisticUtilsGPU.cuh"
 
 // --------------------------------------- BEGIN CUDA FUNCTIONS ---------------------------------
 

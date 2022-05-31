@@ -5,8 +5,8 @@
 
 #include "EuropeanOptionSerialCPU.cuh"
 #include "../Shared/SharedFunctions.cuh"
+#include "../../../StatisticUtils/StatisticUtilsCPU.cuh"
 
-#include "../../../Utilities/StatisticUtils/StatisticUtilsCPU.cuh"
 
 #include <cmath>
 #include <ctime>

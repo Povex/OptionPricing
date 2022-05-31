@@ -5,8 +5,8 @@
 #include "EuropeanOptionGPU.cuh"
 #include "../Shared/SharedFunctions.cuh"
 
-#include "../../../Utilities/errorHandler.cu"
-#include "../../../Utilities/StatisticUtils/StatisticUtilsGPU.cuh"
+#include "../../../../Utils/errorHandler.cu"
+#include "../../../StatisticUtils/StatisticUtilsGPU.cuh"
 
 
 #include <ctime>

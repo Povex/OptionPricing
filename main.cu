@@ -219,6 +219,6 @@ int main() {
     context.printProperties();
 
     OptionPricingAnalysisFacade facade;
-    facade.autoCallableErrorDependenceNObsDates();
+    facade.autoCallableCorrispondenceBinaryOption();
 
 }
