@@ -92,16 +92,6 @@ SimulationResult EuropeanOptionGPU::callPayoff() {
     // Initialize GPU params
     int N_SIMULATION = monteCarloParams->getNSimulations();
 
-    /*
-    dim3 blockDim1D(getGpuParams()->getNThreads());
-    dim3 gridDim1D = 65535;
-    // Compute capability 2.1 needs this
-    const int GPU_MAX_BLOCKS = 65535;
-    const int GPU_MAX_THREADS = GPU_MAX_BLOCKS * 1024;
-    if(gridDim1D.x > GPU_MAX_THREADS) {
-        gridDim1D.x = GPU_MAX_BLOCKS;
-    }*/
-
     // Initialize host-device vectors
     thrust::host_vector<float> h_samples(N_SIMULATION);
     thrust::device_vector<float> d_samples = h_samples;
@@ -132,9 +122,6 @@ SimulationResult EuropeanOptionGPU::callPayoff() {
     gpuErrchk( cudaPeekAtLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
 
-    // Clean memory from PRNG
-    curandDestroyGenerator(generator);
-
     StatisticUtilsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
     statistics.calcMean();
     statistics.calcCI();
@@ -145,6 +132,9 @@ SimulationResult EuropeanOptionGPU::callPayoff() {
 
     // Construct the simulation result
     SimulationResult result(statistics.getMean(), statistics.getConfidence(),statistics.getStdError() , elapsedTime);
+
+    // Clean memory from PRNG
+    curandDestroyGenerator(generator);
 
     return result;
 }
@@ -182,8 +172,7 @@ SimulationResult EuropeanOptionGPU::putPayoff() {
     gpuErrchk( cudaPeekAtLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
 
-    // Clean memory from PRNG
-    curandDestroyGenerator(generator);
+
 
     StatisticUtilsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
     statistics.calcMean();
@@ -195,6 +184,9 @@ SimulationResult EuropeanOptionGPU::putPayoff() {
 
     // Construct the simulation result
     SimulationResult result(statistics.getMean(), statistics.getConfidence(), statistics.getStdError(), elapsedTime);
+
+    // Clean memory from PRNG
+    curandDestroyGenerator(generator);
 
     return result;
 }

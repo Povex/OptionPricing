@@ -219,6 +219,5 @@ int main() {
     context.printProperties();
 
     OptionPricingAnalysisFacade facade;
-    facade.autoCallableCorrispondenceBinaryOption();
-
+    facade.europeanOptionsComparisonsImpl();
 }

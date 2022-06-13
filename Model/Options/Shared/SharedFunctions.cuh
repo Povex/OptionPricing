@@ -18,4 +18,7 @@ float generateS_T(float spotPrice,
                   float dt,
                   float z);
 
+__host__ __device__
+float normalCDF(float value);
+
 #define OPTIONPRICING_SHAREDFUNCTIONS_CUH

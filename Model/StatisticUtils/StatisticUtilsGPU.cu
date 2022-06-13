@@ -35,6 +35,7 @@ void StatisticUtilsGPU::calcMean() {
 void StatisticUtilsGPU::calcCI() {
     unsigned int n = samples.size();
     float *ptr_samples = thrust::raw_pointer_cast(samples.data());
+
     // Use reduction to calculate variance
     varianceKernel<<<gridDim1D, blockDim1D>>>(ptr_samples, n, mean);
     gpuErrchk( cudaPeekAtLastError() );

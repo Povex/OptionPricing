@@ -3,16 +3,13 @@
 //
 
 #include "BinaryOptionAnalytical.cuh"
+#include "../../Shared/SharedFunctions.cuh"
 
 
 BinaryOptionAnalytical::BinaryOptionAnalytical(Asset *asset, float timeToMaturity, float barrier, float payoff,
                                                float rebase) : BinaryOption(asset, timeToMaturity, barrier, payoff,
                                                                             rebase) {}
 
-float normalCDF(float value)
-{
-    return  0.5 * erfcf(-value * M_SQRT1_2);
-}
 
 SimulationResult BinaryOptionAnalytical::callPayoff() {
     double d1 = log(getAsset()->getSpotPrice() / barrier) + (getAsset()->getRiskFreeRate() + 0.5 * pow(getAsset()->getVolatility(), 2)) * timeToMaturity;

@@ -7,7 +7,7 @@
 #include "StatisticUtilsCPU.cuh"
 
 void StatisticUtilsCPU::calcMean() {
-    double temp = std::accumulate(samples, samples + n - 1, 0.0);
+    double temp = std::accumulate(samples, samples + n, 0.0);
     double mean = temp /n;
     setMean(mean);
 }

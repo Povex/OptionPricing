@@ -28,7 +28,7 @@ void EuropeanOptionSerialCPU::setMonteCarloParams(MonteCarloParams *monteCarloPa
 }
 
 SimulationResult EuropeanOptionSerialCPU::callPayoff() {
-    const unsigned int N_SIMULATIONS = getMonteCarloParams()->getNSimulations();
+    const unsigned int N_SIMULATIONS = monteCarloParams->getNSimulations();
     float *samples = (float *)malloc(N_SIMULATIONS * sizeof (float));
 
     size_t size = sizeof(float) * N_SIMULATIONS;
@@ -63,6 +63,7 @@ SimulationResult EuropeanOptionSerialCPU::callPayoff() {
 
     free(h_normals); cudaFree(d_normals);
     free(samples);
+    curandDestroyGenerator(generator);
 
     return result;
 }
@@ -84,6 +85,7 @@ SimulationResult EuropeanOptionSerialCPU::putPayoff() {
 
     // Start timer
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    
     float S_T;
     for(int i=0; i<N_SIMULATIONS;i++){
         S_T = generateS_T(getAsset()->getSpotPrice(), getAsset()->getRiskFreeRate(),
@@ -106,6 +108,7 @@ SimulationResult EuropeanOptionSerialCPU::putPayoff() {
 
     free(h_normals); cudaFree(d_normals);
     free(samples);
+    curandDestroyGenerator(generator);
 
     return result;
 }

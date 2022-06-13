@@ -6,6 +6,7 @@
 #include "../../Shared/SharedFunctions.cuh"
 #include "../../../../Utils/errorHandler.cu"
 #include "../../../StatisticUtils/StatisticUtilsGPU.cuh"
+#include "../Shared/SharedBinaryOption.cuh"
 
 #include <ctime>
 #include <curand.h>
@@ -27,13 +28,14 @@ __global__ void isOverBarrier(float spotPrice,
     float stockT;
 
     while(i < n_paths){
-        stockT = generateS_T(spotPrice,
-                riskFreeRate,
-                volatility,
-                timeToMaturity,
-                d_normals[i]);
-
-        d_samples[i] = stockT >= barrier ? 1 : 0;
+        binaryOptionSample(spotPrice,
+                           riskFreeRate,
+                           volatility,
+                           timeToMaturity,
+                           barrier,
+                           d_normals,
+                           d_samples,
+                           i);
 
         i += gridDim.x * blockDim.x;
     }
@@ -96,9 +98,11 @@ SimulationResult BinaryOptionGPU::callPayoff() {
     SimulationResult result(statistics.getMean(), statistics.getConfidence(),statistics.getStdError() , elapsedTime);
 
     return result;
-
 }
 
 SimulationResult BinaryOptionGPU::putPayoff() {
-return SimulationResult();
+    SimulationResult result = callPayoff();
+    result.setValue(1 - result.getValue());
+
+    return result;
 }

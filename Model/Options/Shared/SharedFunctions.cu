@@ -24,3 +24,8 @@ float generateS_T(float spotPrice,
     return spotPrice * expf((riskFreeRate - 0.5f * powf(volatility, 2))
                             * dt + volatility * sqrtf(dt) * z);
 }
+
+__host__ __device__
+float normalCDF(float value){
+    return  0.5 * erfc(-value * M_SQRT1_2);
+}
