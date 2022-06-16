@@ -45,7 +45,7 @@ void OptionPricingAnalysisFacade::europeanOptionsComparisonsImpl() {
     std::ofstream myFile("AnalysisData/EuropeanOption/ComparisonsImpl/Output/" + filename + ".csv");
     myFile << "Type,Engine,nSimulations,value,stdError,confidence1,confidence2,timeElapsed[s]\n";
 
-    EuropeanOption *optionAnalytical, *optionSerialCPU, *optionGPU;
+    EuropeanOption *optionSerialCPU, *optionGPU;
 
     float strikePrice = 100;
     float timeToMaturity = 1.0f;
@@ -60,10 +60,6 @@ void OptionPricingAnalysisFacade::europeanOptionsComparisonsImpl() {
         GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
         MonteCarloParams monteCarloParams(nSimulations, CURAND_RNG_PSEUDO_MTGP32, 42ULL);
 
-        optionAnalytical = new EuropeanOptionAnalytical(&asset, strikePrice, timeToMaturity);
-        SimulationResult analyticalResultC = optionAnalytical->callPayoff();
-        SimulationResult analyticalResultP = optionAnalytical->putPayoff();
-
         optionSerialCPU = new EuropeanOptionSerialCPU(&asset, strikePrice, timeToMaturity, &monteCarloParams);
         SimulationResult serialCpuResultC = optionSerialCPU->callPayoff();
         SimulationResult serialCpuResultP = optionSerialCPU->putPayoff();
@@ -72,21 +68,18 @@ void OptionPricingAnalysisFacade::europeanOptionsComparisonsImpl() {
         SimulationResult gpuResultC = optionGPU->callPayoff();
         SimulationResult gpuResultP = optionGPU->putPayoff();
 
-        myFile << "EuropeanCall" << sep << "Analytical" << sep << sep << analyticalResultC.getValue() << "\n";
-        myFile << "EuropeanCall" << sep << "SerialCPU" << sep << sep << nSimulations << serialCpuResultC.getValue() << sep << serialCpuResultC.getStdError()
+        myFile << "EuropeanCall" << sep << "SerialCPU" << sep << nSimulations << sep << serialCpuResultC.getValue() << sep << serialCpuResultC.getStdError()
                << sep << serialCpuResultC.getConfidence()[0] << sep << serialCpuResultC.getConfidence()[1]
                << sep << serialCpuResultC.getTimeElapsed() << "\n";
-        myFile << "EuropeanCall" << sep << "GPU" << sep << nSimulations<< sep << gpuResultC.getValue() << sep << gpuResultC.getStdError()
+        myFile << "EuropeanCall" << sep << "GPU" << sep << nSimulations << sep << gpuResultC.getValue() << sep << gpuResultC.getStdError()
                << sep << gpuResultC.getConfidence()[0] << sep << gpuResultC.getConfidence()[1]
                << sep << gpuResultC.getTimeElapsed() << "\n";
-        myFile << "EuropeanPut" << sep << "Analytical" << sep << sep << analyticalResultP.getValue() << "\n";
-        myFile << "EuropeanPut" << sep << "SerialCPU" << sep << nSimulations<< sep << serialCpuResultP.getValue() << sep << serialCpuResultP.getStdError()
+        myFile << "EuropeanPut" << sep << "SerialCPU" << sep << nSimulations << sep << serialCpuResultP.getValue() << sep << serialCpuResultP.getStdError()
                << sep << serialCpuResultP.getConfidence()[0] << sep << serialCpuResultP.getConfidence()[1]
                << sep << serialCpuResultP.getTimeElapsed() << "\n";
-        myFile << "EuropeanPut" << sep << "GPU" << sep << nSimulations<< sep << gpuResultP.getValue() << sep << gpuResultP.getStdError()
+        myFile << "EuropeanPut" << sep << "GPU" << sep << nSimulations << sep << gpuResultP.getValue() << sep << gpuResultP.getStdError()
                << sep << gpuResultP.getConfidence()[0] << sep << gpuResultP.getConfidence()[1]
                << sep << gpuResultP.getTimeElapsed() << "\n";
-
     }
 
     myFile.close();
@@ -233,6 +226,70 @@ void OptionPricingAnalysisFacade::europeanOptionTimeGpuParams() {
                                                           &monteCarloParams, &gpuParams);
         SimulationResult gpuResult = optionGPU->callPayoff();
         myFile << "EuropeanCall" << sep << "GPU" << sep << nSimulations << sep << gpuParams.getThreadsPerBlock().x << sep << gpuResult.getTimeElapsed() << "\n";
+    }
+
+    myFile.close();
+}
+
+void OptionPricingAnalysisFacade::europeanOptionsErrorTrendSimulationsQM() {
+    cout << "\n [Running] - European option error trend simulations quasi montecarlo, please wait...\n";
+
+    dim3 threadsPerBlock(512);
+    Asset asset(100.0f, 0.25f, 0.01f);
+    float strikePrice = 100.0f;
+    float timeToMaturity = 1.0f;
+
+    EuropeanOption *optionAnalytical, *optionSerialCPU, *optionGPU;
+    MonteCarloParams *monteCarloParams;
+
+    string gpuName = ContextGPU::instance()->getDeviceProp().name;
+    string date = DateUtils().getDate();
+    string filename = gpuName + " " + date;
+    string sep = ",";
+    std::ofstream myFile("AnalysisData/EuropeanOption/ErrorTrendSimulationsQM/Output/" + filename + ".csv");
+    myFile << "Type,Engine,nSimulations,value,stdError,confidence1,confidence2,timeElapsed[s]\n";
+
+    optionAnalytical = new EuropeanOptionAnalytical(&asset, strikePrice, timeToMaturity);
+    SimulationResult analyticalC = optionAnalytical->callPayoff();
+    SimulationResult analyticalP = optionAnalytical->putPayoff();
+
+    myFile << "EuropeanCall" << sep << "Analytical" << sep << sep << analyticalC.getValue() << "\n";
+    myFile << "EuropeanPut" << sep << "Analytical" << sep << sep << analyticalP.getValue() << "\n";
+
+    int nSimulations = 0;
+    for(int i=0; i<26; i++){
+        nSimulations = pow(2, i);
+        cout << "2 ^ " << i << endl;
+        monteCarloParams = new MonteCarloParams(nSimulations, CURAND_RNG_QUASI_SOBOL64, 42ULL);
+        dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
+
+        GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
+
+        optionSerialCPU = new EuropeanOptionSerialCPU(&asset, strikePrice, timeToMaturity, monteCarloParams);
+        SimulationResult serialCpuResultC = optionSerialCPU->callPayoff();
+        SimulationResult serialCpuResultP = optionSerialCPU->putPayoff();
+
+        optionGPU = new EuropeanOptionGPU(&asset, strikePrice, timeToMaturity, monteCarloParams, &gpuParams);
+        SimulationResult gpuResultC = optionGPU->callPayoff();
+        SimulationResult gpuResultP = optionGPU->putPayoff();
+
+        string gpuName = ContextGPU::instance()->getDeviceProp().name;
+        string date = DateUtils().getDate();
+        string filename = gpuName + " " + date;
+        string sep = ",";
+
+        myFile << "EuropeanCall" << sep << "SerialCPU" << sep << nSimulations << sep << serialCpuResultC.getValue() << sep << serialCpuResultC.getStdError()
+               << sep << serialCpuResultC.getConfidence()[0] << sep << serialCpuResultC.getConfidence()[1]
+               << sep << serialCpuResultC.getTimeElapsed() << "\n";
+        myFile << "EuropeanCall" << sep << "GPU" << sep << nSimulations << sep << gpuResultC.getValue() << sep << gpuResultC.getStdError()
+               << sep << gpuResultC.getConfidence()[0] << sep << gpuResultC.getConfidence()[1]
+               << sep << gpuResultC.getTimeElapsed() << "\n";
+        myFile << "EuropeanPut" << sep << "SerialCPU" << sep << nSimulations << sep << serialCpuResultP.getValue() << sep << serialCpuResultP.getStdError()
+               << sep << serialCpuResultP.getConfidence()[0] << sep << serialCpuResultP.getConfidence()[1]
+               << sep << serialCpuResultP.getTimeElapsed() << "\n";
+        myFile << "EuropeanPut" << sep << "GPU" << sep << nSimulations << sep << gpuResultP.getValue() << sep << gpuResultP.getStdError()
+               << sep << gpuResultP.getConfidence()[0] << sep << gpuResultP.getConfidence()[1]
+               << sep << gpuResultP.getTimeElapsed() << "\n";
     }
 
     myFile.close();

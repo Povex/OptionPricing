@@ -219,5 +219,5 @@ int main() {
     context.printProperties();
 
     OptionPricingAnalysisFacade facade;
-    facade.europeanOptionsComparisonsImpl();
+    facade.europeanOptionsErrorTrendSimulationsQM();
 }

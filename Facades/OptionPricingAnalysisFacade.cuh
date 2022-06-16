@@ -36,6 +36,8 @@ public:
     void autoCallableErrorDependenceNObsDates();
 
     void autoCallableCorrispondenceBinaryOption();
+
+    void europeanOptionsErrorTrendSimulationsQM();
 };
 
 
