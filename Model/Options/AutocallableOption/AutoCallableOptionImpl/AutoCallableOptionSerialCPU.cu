@@ -1,19 +1,18 @@
 //
-// Created by marco on 21/06/22.
+// Created by marco on 24/05/22.
 //
 
-#include "AutoCallableOptionCPU.cuh"
+#include <chrono>
+#include "AutoCallableOptionSerialCPU.cuh"
 #include "../Shared/SharedAutoCallable.cuh"
-#include "../../../StatisticUtils/StatisticsCPU.cuh"
+#include "../../../StatisticUtils/StatisticsSerialCPU.cuh"
 
 #include <ctime>
-#include <chrono>
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <curand_kernel.h>
-#include <omp.h>
 
-AutoCallableOptionCPU::AutoCallableOptionCPU(Asset *asset, float rebase, const std::vector<float> &observationDates,
+AutoCallableOptionSerialCPU::AutoCallableOptionSerialCPU(Asset *asset, float rebase, const std::vector<float> &observationDates,
                                              const std::vector<float> &barriers, const std::vector<float> &payoffs,
                                              MonteCarloParams *monteCarloParams) : AutoCallableOption(asset, rebase,
                                                                                                       observationDates,
@@ -21,15 +20,15 @@ AutoCallableOptionCPU::AutoCallableOptionCPU(Asset *asset, float rebase, const s
                                                                                                       payoffs),
                                                                                    monteCarloParams(monteCarloParams) {}
 
-MonteCarloParams *AutoCallableOptionCPU::getMonteCarloParams() const {
+MonteCarloParams *AutoCallableOptionSerialCPU::getMonteCarloParams() const {
     return monteCarloParams;
 }
 
-void AutoCallableOptionCPU::setMonteCarloParams(MonteCarloParams *monteCarloParams) {
+void AutoCallableOptionSerialCPU::setMonteCarloParams(MonteCarloParams *monteCarloParams) {
     this->monteCarloParams = monteCarloParams;
 }
 
-SimulationResult AutoCallableOptionCPU::callPayoff() {
+SimulationResult AutoCallableOptionSerialCPU::callPayoff() {
     const int N_SIMULATIONS = getMonteCarloParams()->getNSimulations();
     float *samples = (float *)malloc(sizeof(float) * N_SIMULATIONS);
 
@@ -52,7 +51,6 @@ SimulationResult AutoCallableOptionCPU::callPayoff() {
     // Start timer
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-    #pragma omp parallel for
     for(int i=0; i<N_SIMULATIONS; i++){
         autoCallablePayoff(getAsset()->getSpotPrice(),
                            getAsset()->getRiskFreeRate(),
@@ -65,9 +63,10 @@ SimulationResult AutoCallableOptionCPU::callPayoff() {
                            ptr_payoffs,
                            observationDates.size(),
                            i, N_SIMULATIONS);
+
     }
 
-    StatisticsCPU statistics(samples, N_SIMULATIONS);
+    StatisticsSerialCPU statistics(samples, N_SIMULATIONS);
     statistics.calcMean();
     statistics.calcCI();
 
@@ -85,4 +84,8 @@ SimulationResult AutoCallableOptionCPU::callPayoff() {
     return result;
 }
 
-SimulationResult AutoCallableOptionCPU::putPayoff() {}
+SimulationResult AutoCallableOptionSerialCPU::putPayoff() {
+    return SimulationResult();
+}
+
+

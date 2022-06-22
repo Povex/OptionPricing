@@ -1,13 +1,11 @@
 //
-// Created by marco on 24/05/22.
+// Created by marco on 21/06/22.
 //
 
 #ifndef OPTIONPRICING_AUTOCALLABLEOPTIONCPU_CUH
 #define OPTIONPRICING_AUTOCALLABLEOPTIONCPU_CUH
 
 
-#include "../../../InputOutput/MonteCarloParams.cuh"
-#include "../../../InputOutput/SimulationResult.cuh"
 #include "../AutoCallableOption.cuh"
 
 class AutoCallableOptionCPU : public AutoCallableOption{

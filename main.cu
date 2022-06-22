@@ -7,10 +7,13 @@
 #include "Model/Options/EuropeanOption/EuropeanOptionImpl/EuropeanOptionGPU.cuh"
 #include "Model/Options/EuropeanOption/EuropeanOptionImpl/EuropeanOptionAnalytical.cuh"
 #include "Model/Options/EuropeanOption/EuropeanOptionImpl/EuropeanOptionSerialCPU.cuh"
+#include "Model/Options/EuropeanOption/EuropeanOptionImpl/EuropeanOptionCPU.cuh"
 #include "Model/Options/AutocallableOption/AutoCallableOptionImpl/AutoCallableOptionGPU.cuh"
-#include "Model/Options/AutocallableOption/AutoCallableOptionImpl/AutoCallableOptionCPU.cuh"
+#include "Model/Options/AutocallableOption/AutoCallableOptionImpl/AutoCallableOptionSerialCPU.cuh"
 #include "Facades/OptionPricingAnalysisFacade.cuh"
 #include "Utils/ContextGPU.cuh"
+
+
 
 #include <iostream>
 
@@ -207,17 +210,19 @@ void testAutoCallableOptions2(){
     dim3 blocksPerGrid = ContextGPU().instance()->getOptimalBlocksPerGrid(threadsPerBlock, nSimulations);
     GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
 
-    AutoCallableOptionCPU optionC(&asset, 50.0f, observationDates, barriers, payoffs,&monteCarloParams);
+    AutoCallableOptionSerialCPU optionC(&asset, 50.0f, observationDates, barriers, payoffs,&monteCarloParams);
     cout << "AutoCallable CPU: " << optionC.callPayoff() << endl;
 
     AutoCallableOptionGPU optionG(&asset, 50.0f, observationDates, barriers, payoffs,&monteCarloParams, &gpuParams);
     cout << "AutoCallable GPU: " << optionG.callPayoff() << endl;
 }
 
+
 int main() {
     ContextGPU context;
     context.printProperties();
 
     OptionPricingAnalysisFacade facade;
-    facade.europeanOptionsErrorTrendSimulationsQM();
+    facade.autoCallableOptionsErrorTrendSimulation();
+
 }

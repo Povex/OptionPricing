@@ -4,7 +4,7 @@
 
 #include <chrono>
 #include "BinaryOptionCPU.cuh"
-#include "../../../StatisticUtils/StatisticUtilsCPU.cuh"
+#include "../../../StatisticUtils/StatisticsSerialCPU.cuh"
 #include "../../Shared/SharedFunctions.cuh"
 #include "../Shared/SharedBinaryOption.cuh"
 
@@ -42,7 +42,7 @@ SimulationResult BinaryOptionCPU::callPayoff() {
                                    i);
     }
 
-    StatisticUtilsCPU statistics(samples, N_SIMULATIONS);
+    StatisticsSerialCPU statistics(samples, N_SIMULATIONS);
     statistics.calcMean();
     statistics.calcCI();
 

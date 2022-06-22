@@ -5,7 +5,7 @@
 #include "BinaryOptionGPU.cuh"
 #include "../../Shared/SharedFunctions.cuh"
 #include "../../../../Utils/errorHandler.cu"
-#include "../../../StatisticUtils/StatisticUtilsGPU.cuh"
+#include "../../../StatisticUtils/StatisticsGPU.cuh"
 #include "../Shared/SharedBinaryOption.cuh"
 
 #include <ctime>
@@ -86,7 +86,7 @@ SimulationResult BinaryOptionGPU::callPayoff() {
     // Clean memory from PRNG
     curandDestroyGenerator(generator);
 
-    StatisticUtilsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
+    StatisticsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
     statistics.calcMean();
     statistics.calcCI();
 

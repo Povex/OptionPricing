@@ -4,7 +4,7 @@
 
 #include <thrust/reduce.h>
 #include <thrust/transform_reduce.h>
-#include "StatisticUtilsGPU.cuh"
+#include "StatisticsGPU.cuh"
 #include "../../Utils/errorHandler.cu"
 
 
@@ -20,7 +20,7 @@ void varianceKernel(float *samples, int n, float mean){
 }
 
 
-void StatisticUtilsGPU::calcMean() {
+void StatisticsGPU::calcMean() {
     // Use reduction to calculate mean
     double sum = thrust::reduce(samples.begin(), samples.end(), 0.0, thrust::plus<double>());
     gpuErrchk( cudaPeekAtLastError() );
@@ -32,7 +32,7 @@ void StatisticUtilsGPU::calcMean() {
 
 }
 
-void StatisticUtilsGPU::calcCI() {
+void StatisticsGPU::calcCI() {
     unsigned int n = samples.size();
     float *ptr_samples = thrust::raw_pointer_cast(samples.data());
 
@@ -58,23 +58,23 @@ void StatisticUtilsGPU::calcCI() {
     setConfidence(confidence);
 }
 
-const dim3 &StatisticUtilsGPU::getBlockDim1D() const {
+const dim3 &StatisticsGPU::getBlockDim1D() const {
     return blockDim1D;
 }
 
-void StatisticUtilsGPU::setBlockDim1D(const dim3 &blockDim1D) {
+void StatisticsGPU::setBlockDim1D(const dim3 &blockDim1D) {
     this->blockDim1D = blockDim1D;
 }
 
-const dim3 &StatisticUtilsGPU::getGridDim1D() const {
+const dim3 &StatisticsGPU::getGridDim1D() const {
     return gridDim1D;
 }
 
-void StatisticUtilsGPU::setGridDim1D(const dim3 &gridDim1D) {
+void StatisticsGPU::setGridDim1D(const dim3 &gridDim1D) {
     this->gridDim1D = gridDim1D;
 }
 
-StatisticUtilsGPU::StatisticUtilsGPU(const dim3 &blockDim1D, const dim3 &gridDim1D,
+StatisticsGPU::StatisticsGPU(const dim3 &blockDim1D, const dim3 &gridDim1D,
                                      const thrust::device_vector<float> &samples) : blockDim1D(blockDim1D),
                                                                                     gridDim1D(gridDim1D),
                                                                                     samples(samples) {}

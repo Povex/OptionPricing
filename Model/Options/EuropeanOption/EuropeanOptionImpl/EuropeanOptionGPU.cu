@@ -6,7 +6,7 @@
 #include "../../Shared/SharedFunctions.cuh"
 
 #include "../../../../Utils/errorHandler.cu"
-#include "../../../StatisticUtils/StatisticUtilsGPU.cuh"
+#include "../../../StatisticUtils/StatisticsGPU.cuh"
 
 
 #include <ctime>
@@ -122,7 +122,7 @@ SimulationResult EuropeanOptionGPU::callPayoff() {
     gpuErrchk( cudaPeekAtLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
 
-    StatisticUtilsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
+    StatisticsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
     statistics.calcMean();
     statistics.calcCI();
 
@@ -174,7 +174,7 @@ SimulationResult EuropeanOptionGPU::putPayoff() {
 
 
 
-    StatisticUtilsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
+    StatisticsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
     statistics.calcMean();
     statistics.calcCI();
 

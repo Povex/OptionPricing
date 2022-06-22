@@ -14,7 +14,7 @@
 #include <thrust/device_vector.h>
 
 #include "../../../../Utils/errorHandler.cu"
-#include "../../../StatisticUtils/StatisticUtilsGPU.cuh"
+#include "../../../StatisticUtils/StatisticsGPU.cuh"
 
 // --------------------------------------- BEGIN CUDA FUNCTIONS ---------------------------------
 
@@ -129,7 +129,7 @@ SimulationResult AutoCallableOptionGPU::callPayoff() {
     // Clean memory from PRNG
     curandDestroyGenerator(generator);
 
-    StatisticUtilsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
+    StatisticsGPU statistics(gpuParams->getThreadsPerBlock(), gpuParams->getBlocksPerGrid(), d_samples);
     statistics.calcMean();
     statistics.calcCI();
 

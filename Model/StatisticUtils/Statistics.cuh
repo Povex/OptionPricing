@@ -2,13 +2,13 @@
 // Created by marco on 23/05/22.
 //
 
-#ifndef OPTIONPRICING_STATISTICUTILS_CUH
-#define OPTIONPRICING_STATISTICUTILS_CUH
+#ifndef OPTIONPRICING_STATISTICS_CUH
+#define OPTIONPRICING_STATISTICS_CUH
 
 
 #include <vector>
 
-class StatisticUtils {
+class Statistics {
 protected:
     float stdError;
     float stdDev;
@@ -16,11 +16,11 @@ protected:
     float mean;
 
 public:
-    StatisticUtils(float stdError, float stdDev, const std::vector<float> &confidence, float mean);
+    Statistics(float stdError, float stdDev, const std::vector<float> &confidence, float mean);
 
-    StatisticUtils();
+    Statistics();
 
-    ~StatisticUtils() = default;
+    ~Statistics() = default;
 
     void calcMean();
     void calcCI();
@@ -43,4 +43,4 @@ public:
 };
 
 
-#endif //OPTIONPRICING_STATISTICUTILS_CUH
+#endif //OPTIONPRICING_STATISTICS_CUH

@@ -2,23 +2,23 @@
 // Created by marco on 23/05/22.
 //
 
-#ifndef OPTIONPRICING_STATISTICUTILSGPU_CUH
-#define OPTIONPRICING_STATISTICUTILSGPU_CUH
+#ifndef OPTIONPRICING_STATISTICSGPU_CUH
+#define OPTIONPRICING_STATISTICSGPU_CUH
 
 
 #include <thrust/device_vector.h>
-#include "StatisticUtils.cuh"
+#include "Statistics.cuh"
 
-class StatisticUtilsGPU  : public StatisticUtils {
+class StatisticsGPU  : public Statistics {
 protected:
     dim3 blockDim1D;
     dim3 gridDim1D;
     thrust::device_vector<float> samples;
 
 public:
-    StatisticUtilsGPU(const dim3 &blockDim1D, const dim3 &gridDim1D, const thrust::device_vector<float> &samples);
+    StatisticsGPU(const dim3 &blockDim1D, const dim3 &gridDim1D, const thrust::device_vector<float> &samples);
 
-    ~StatisticUtilsGPU() = default;
+    ~StatisticsGPU() = default;
 
     void calcMean();
     void calcCI();
@@ -33,4 +33,4 @@ public:
 };
 
 
-#endif //OPTIONPRICING_STATISTICUTILSGPU_CUH
+#endif //OPTIONPRICING_STATISTICSGPU_CUH

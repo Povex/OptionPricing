@@ -17,12 +17,14 @@
 #include "../Model/Options/EuropeanOption/EuropeanOptionImpl/EuropeanOptionGPU.cuh"
 #include "../Utils/DateUtils.cuh"
 #include "../Model/Options/AutocallableOption/AutoCallableOption.cuh"
-#include "../Model/Options/AutocallableOption/AutoCallableOptionImpl/AutoCallableOptionCPU.cuh"
+#include "../Model/Options/AutocallableOption/AutoCallableOptionImpl/AutoCallableOptionSerialCPU.cuh"
 #include "../Model/Options/AutocallableOption/AutoCallableOptionImpl/AutoCallableOptionGPU.cuh"
 #include "../Utils/ContextGPU.cuh"
 #include "../Model/Options/BinaryOption/BinaryOption.cuh"
 #include "../Model/Options/BinaryOption/BinaryOptionImpl/BinaryOptionAnalytical.cuh"
 #include "../Model/Options/BinaryOption/BinaryOptionImpl/BinaryOptionGPU.cuh"
+#include "../Model/Options/EuropeanOption/EuropeanOptionImpl/EuropeanOptionCPU.cuh"
+#include "../Model/Options/AutocallableOption/AutoCallableOptionImpl/AutoCallableOptionCPU.cuh"
 
 using namespace std;
 
@@ -45,7 +47,7 @@ void OptionPricingAnalysisFacade::europeanOptionsComparisonsImpl() {
     std::ofstream myFile("AnalysisData/EuropeanOption/ComparisonsImpl/Output/" + filename + ".csv");
     myFile << "Type,Engine,nSimulations,value,stdError,confidence1,confidence2,timeElapsed[s]\n";
 
-    EuropeanOption *optionSerialCPU, *optionGPU;
+    EuropeanOption *optionSerialCPU, *optionGPU, *optionCPU;
 
     float strikePrice = 100;
     float timeToMaturity = 1.0f;
@@ -64,9 +66,14 @@ void OptionPricingAnalysisFacade::europeanOptionsComparisonsImpl() {
         SimulationResult serialCpuResultC = optionSerialCPU->callPayoff();
         SimulationResult serialCpuResultP = optionSerialCPU->putPayoff();
 
+        optionCPU = new EuropeanOptionCPU(&asset, strikePrice, timeToMaturity, &monteCarloParams);
+        SimulationResult cpuResultC = optionCPU->callPayoff();
+        SimulationResult cpuResultP = optionCPU->putPayoff();
+
         optionGPU = new EuropeanOptionGPU(&asset, strikePrice, timeToMaturity, &monteCarloParams, &gpuParams);
         SimulationResult gpuResultC = optionGPU->callPayoff();
         SimulationResult gpuResultP = optionGPU->putPayoff();
+
 
         myFile << "EuropeanCall" << sep << "SerialCPU" << sep << nSimulations << sep << serialCpuResultC.getValue() << sep << serialCpuResultC.getStdError()
                << sep << serialCpuResultC.getConfidence()[0] << sep << serialCpuResultC.getConfidence()[1]
@@ -74,12 +81,18 @@ void OptionPricingAnalysisFacade::europeanOptionsComparisonsImpl() {
         myFile << "EuropeanCall" << sep << "GPU" << sep << nSimulations << sep << gpuResultC.getValue() << sep << gpuResultC.getStdError()
                << sep << gpuResultC.getConfidence()[0] << sep << gpuResultC.getConfidence()[1]
                << sep << gpuResultC.getTimeElapsed() << "\n";
+        myFile << "EuropeanCall" << sep << "CPU" << sep << nSimulations << sep << cpuResultC.getValue() << sep << cpuResultC.getStdError()
+               << sep << cpuResultC.getConfidence()[0] << sep << cpuResultC.getConfidence()[1]
+               << sep << cpuResultC.getTimeElapsed() << "\n";
         myFile << "EuropeanPut" << sep << "SerialCPU" << sep << nSimulations << sep << serialCpuResultP.getValue() << sep << serialCpuResultP.getStdError()
                << sep << serialCpuResultP.getConfidence()[0] << sep << serialCpuResultP.getConfidence()[1]
                << sep << serialCpuResultP.getTimeElapsed() << "\n";
         myFile << "EuropeanPut" << sep << "GPU" << sep << nSimulations << sep << gpuResultP.getValue() << sep << gpuResultP.getStdError()
                << sep << gpuResultP.getConfidence()[0] << sep << gpuResultP.getConfidence()[1]
                << sep << gpuResultP.getTimeElapsed() << "\n";
+        myFile << "EuropeanPut" << sep << "CPU" << sep << nSimulations << sep << cpuResultP.getValue() << sep << cpuResultP.getStdError()
+               << sep << cpuResultP.getConfidence()[0] << sep << cpuResultP.getConfidence()[1]
+               << sep << cpuResultP.getTimeElapsed() << "\n";
     }
 
     myFile.close();
@@ -328,7 +341,7 @@ void OptionPricingAnalysisFacade::autoCallableAsymptoticLimitsAnalysis() {
     double expected = payoffs[0] * exp(-0.03f * observationDates[0]);
 
     AutoCallableOption *optionSerialCPU, *optionGPU;
-    optionSerialCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
+    optionSerialCPU = new AutoCallableOptionSerialCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
     SimulationResult serialCpuResultC = optionSerialCPU->callPayoff();
 
     optionGPU = new AutoCallableOptionGPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams, &gpuParams);
@@ -354,7 +367,7 @@ void OptionPricingAnalysisFacade::autoCallableAsymptoticLimitsAnalysis() {
 
     expected = payoffs[1] * exp(-0.03f * observationDates[1]);
 
-    optionSerialCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
+    optionSerialCPU = new AutoCallableOptionSerialCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
     serialCpuResultC = optionSerialCPU->callPayoff();
 
     optionGPU = new AutoCallableOptionGPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams, &gpuParams);
@@ -371,7 +384,7 @@ void OptionPricingAnalysisFacade::autoCallableAsymptoticLimitsAnalysis() {
     barriers[1] = std::numeric_limits<float>::infinity();
     barriers[2] = 0.0f;
 
-    optionSerialCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
+    optionSerialCPU = new AutoCallableOptionSerialCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
     serialCpuResultC = optionSerialCPU->callPayoff();
 
     optionGPU = new AutoCallableOptionGPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams, &gpuParams);
@@ -391,7 +404,7 @@ void OptionPricingAnalysisFacade::autoCallableAsymptoticLimitsAnalysis() {
     barriers[1] = std::numeric_limits<float>::infinity();
     barriers[2] = std::numeric_limits<float>::infinity();
 
-    optionSerialCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
+    optionSerialCPU = new AutoCallableOptionSerialCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
     serialCpuResultC = optionSerialCPU->callPayoff();
 
     optionGPU = new AutoCallableOptionGPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams, &gpuParams);
@@ -448,7 +461,7 @@ void OptionPricingAnalysisFacade::autoCallableNObservationDates() {
         expected = 50.0f * exp(-0.03f * observationDates.back());
 
         if(nBinaryOptions < 128) {
-            optionSerialCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs,
+            optionSerialCPU = new AutoCallableOptionSerialCPU(&asset, 50.0f, observationDates, barriers, payoffs,
                                                         &monteCarloParams);
             SimulationResult serialCpuResultC = optionSerialCPU->callPayoff();
             if(maxCpuTime < serialCpuResultC.getTimeElapsed()) maxCpuTime = serialCpuResultC.getTimeElapsed();
@@ -475,7 +488,7 @@ void OptionPricingAnalysisFacade::autoCallableOptionsErrorTrendSimulation() {
     cout << "\n [Running] - AutoCallable option error trend simulation, please wait...\n";
 
     Asset asset(100.0f, 0.3f, 0.03f);
-    AutoCallableOption *optionSerialCPU, *optionGPU;
+    AutoCallableOption *optionSerialCPU, *optionCPU, *optionGPU;
 
     string gpuName = ContextGPU::instance()->getDeviceProp().name;
     string date = DateUtils().getDate();
@@ -508,16 +521,22 @@ void OptionPricingAnalysisFacade::autoCallableOptionsErrorTrendSimulation() {
         GPUParams gpuParams(threadsPerBlock, blocksPerGrid);
         MonteCarloParams monteCarloParams(nSimulations, CURAND_RNG_PSEUDO_MTGP32, 42ULL);
 
-        optionSerialCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs,
+        optionSerialCPU = new AutoCallableOptionSerialCPU(&asset, 50.0f, observationDates, barriers, payoffs,
                                                     &monteCarloParams);
         SimulationResult serialCpuResultC = optionSerialCPU->callPayoff();
 
         optionGPU = new AutoCallableOptionGPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams, &gpuParams);
         SimulationResult gpuResultC = optionGPU->callPayoff();
 
+        optionCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams);
+        SimulationResult cpuResultC = optionCPU->callPayoff();
+
         myFile << "AutoCallableCall" << sep << "SerialCPU" << sep << "2^" + to_string(i) << sep << serialCpuResultC.getValue() << sep << serialCpuResultC.getStdError()
                << sep << serialCpuResultC.getConfidence()[0] << sep << serialCpuResultC.getConfidence()[1]
                << sep << serialCpuResultC.getTimeElapsed() << "\n";
+        myFile << "AutoCallableCall" << sep << "CPU" << sep << "2^" + to_string(i) << sep << cpuResultC.getValue() << sep << cpuResultC.getStdError()
+               << sep << cpuResultC.getConfidence()[0] << sep << cpuResultC.getConfidence()[1]
+               << sep << cpuResultC.getTimeElapsed() << "\n";
         myFile << "AutoCallableCall" << sep << "GPU" << sep << "2^" + to_string(i) << sep << gpuResultC.getValue() << sep << gpuResultC.getStdError()
                << sep << gpuResultC.getConfidence()[0] << sep << gpuResultC.getConfidence()[1]
                << sep << gpuResultC.getTimeElapsed() << "\n";
@@ -560,7 +579,7 @@ void OptionPricingAnalysisFacade::autoCallableExecTimeMultipleOptions() {
     std::ofstream myFile("AnalysisData/AutoCallableOption/ExecutionTimeMultipleOptions/Output/" + filename + ".csv");
     myFile << "Type,Engine,batchSize,nSimulationsPerOption,timeElapsed[s]\n";
 
-    AutoCallableOptionCPU *optionSerialCPU = new AutoCallableOptionCPU(&asset, 50.0f, observationDates, barriers, payoffs,
+    AutoCallableOptionSerialCPU *optionSerialCPU = new AutoCallableOptionSerialCPU(&asset, 50.0f, observationDates, barriers, payoffs,
                                                 &monteCarloParams);
     AutoCallableOptionGPU *optionGPU = new AutoCallableOptionGPU(&asset, 50.0f, observationDates, barriers, payoffs, &monteCarloParams, &gpuParams);
 
@@ -917,7 +936,7 @@ void OptionPricingAnalysisFacade::autoCallableCorrispondenceBinaryOption() {
     AutoCallableOption *autoCallableOption = new AutoCallableOptionGPU(&asset, 0.0f, observationDates, barriers, payoffs, &monteCarloParams, &gpuParams);
     SimulationResult result = autoCallableOption->callPayoff();
 
-    AutoCallableOption *autoCallableOptionC = new AutoCallableOptionCPU(&asset, 0.0f, observationDates, barriers, payoffs, &monteCarloParams);
+    AutoCallableOption *autoCallableOptionC = new AutoCallableOptionSerialCPU(&asset, 0.0f, observationDates, barriers, payoffs, &monteCarloParams);
     SimulationResult resultC = autoCallableOptionC->callPayoff();
 
     myFile << "Type,Engine,nObsDates,value,nSimulations,stdError,confidence1,confidence2,timeElapsed[s]\n";
